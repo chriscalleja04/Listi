@@ -7,9 +7,13 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.Menu;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -17,6 +21,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.navigation.NavigationView;
 
 import androidx.annotation.NonNull;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -30,11 +35,17 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.OAuthProvider;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import org.w3c.dom.Text;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
@@ -48,7 +59,10 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseAuth.AuthStateListener authStateListener;
     private OAuthProvider.Builder provider;
     private Button button,logoutButton;
-    private TextView emailText;
+    private TextView navUsername, navEmail;
+
+
+    private ImageView profile;
     private FirebaseFirestore db;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,8 +122,13 @@ public class MainActivity extends AppCompatActivity {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         userViewModel.setUser(currentUser);
 
+
+
+
         logoutButton = findViewById(R.id.logout);
         logoutButton.setOnClickListener(v -> signOut());
+
+
     }
     private void checkPendingResult() {
 
@@ -160,7 +179,37 @@ public class MainActivity extends AppCompatActivity {
                                     FirebaseUser user = authResult.getUser();
                                     if(user!=null){
                                         userViewModel.setUser(user);
-                                        addUserToFirestore(user);
+                                        navUsername = findViewById(R.id.username);
+                                        navUsername.setText(user.getDisplayName());
+                                        navEmail = findViewById(R.id.navEmail);
+                                        navEmail.setText(user.getEmail());
+                                        profile = findViewById(R.id.profilePicture);
+                                        profile.setImageURI(user.getPhotoUrl());
+                                        DocumentReference docRef = db.collection("users").document(user.getUid());
+                                        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                            @Override
+                                            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                                if(task.isSuccessful()){
+                                                    DocumentSnapshot document = task.getResult();
+                                                    if(document.exists()){
+                                                        fetchSchoolID(user.getUid());
+                                                        Log.d(TAG, "DocumentSnapshot data: " + document.getData());
+                                                    } else{
+                                                        addUserToFirestore(user);
+                                                        fetchSchoolID(user.getUid());
+                                                        Log.d(TAG, "No such document");
+                                                    }
+                                                }else{
+                                                    Log.d(TAG, "get failed with ", task.getException());
+                                                }
+                                            }
+                                        });
+
+
+
+
+
+                                    }else{
 
                                     }
                                 }
@@ -172,6 +221,7 @@ public class MainActivity extends AppCompatActivity {
                                     // Handle failure.
                                 }
                             });
+
         }
 
 
@@ -200,7 +250,82 @@ public class MainActivity extends AppCompatActivity {
                     });
 
         }
+
     }
+
+
+    public void fetchSchoolID(String userID){
+        DocumentReference docRef = db.collection("users").document(userID);
+        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if(task.isSuccessful()){
+                    DocumentSnapshot document = task.getResult();
+                    if(document.exists()){
+                        String id = document.getString("schoolId");
+                        userViewModel.setSchoolID(id);
+                        fetchSchoolName(id);
+                        fetchYearGroups(id);
+                        Log.d(TAG, "DocumentSnapshot data: " + document.getData());
+                    } else{
+                        Log.d(TAG, "No such document");
+                    }
+                }else{
+                    Log.d(TAG, "get failed with ", task.getException());
+                }
+            }
+        });
+
+    }
+
+    public void fetchSchoolName(String schoolID){
+        DocumentReference docRef = db.collection("schools").document(schoolID);
+        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if(task.isSuccessful()){
+                    DocumentSnapshot document = task.getResult();
+                    if(document.exists()){
+                        String name = document.getString("name");
+                        userViewModel.setSchoolName(name);
+                        Log.d(TAG, "DocumentSnapshot data: " + document.getData());
+                    } else{
+                        Log.d(TAG, "No such document");
+                    }
+                }else{
+                    Log.d(TAG, "get failed with ", task.getException());
+                }
+            }
+        });
+
+    }
+    public void fetchYearGroups(String schoolID) {
+       db.collection("schools")
+               .document(schoolID)
+               .collection("yearGroups")
+               .get()
+               .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                   @Override
+                   public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if(task.isSuccessful()){
+                            List<String> yearGroupNames = new ArrayList<>();
+                            for (QueryDocumentSnapshot document : task.getResult()){
+                                String name = document.getString("name");
+                                if(name != null){
+                                    yearGroupNames.add(name);
+                                }
+                                Log.d(TAG, document.getId() + " => " + document.getData());
+                            }
+                            userViewModel.setYearGroups(yearGroupNames);
+                        }else{
+                            Log.d(TAG, "Error getting documents: ", task.getException());
+                        }
+                   }
+               });
+
+
+    }
+
     private void signOut(){
         FirebaseAuth.getInstance().signOut();
         userViewModel.setUser(null);
