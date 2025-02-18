@@ -12,14 +12,14 @@
         tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/nav_gallery"
-        android:name="com.example.listi.ui.gallery.GalleryFragment"
-        android:label="@string/menu_gallery"
-        tools:layout="@layout/fragment_gallery" />
+        android:id="@+id/nav_accessibility"
+        android:name="com.example.listi.ui.accessibility.AccessibilityFragment"
+        android:label="@string/menu_accessibility"
+        tools:layout="@layout/fragment_accessibility" />
 
     <fragment
-        android:id="@+id/nav_slideshow"
-        android:name="com.example.listi.ui.slideshow.SlideshowFragment"
-        android:label="@string/menu_slideshow"
-        tools:layout="@layout/fragment_slideshow" />
+        android:id="@+id/nav_staff_management"
+        android:name="com.example.listi.ui.staffManagement.StaffManagementFragment"
+        android:label="@string/menu_staff_management"
+        tools:layout="@layout/fragment_staff_management" />
 </navigation>

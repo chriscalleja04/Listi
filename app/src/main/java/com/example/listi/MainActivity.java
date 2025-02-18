@@ -85,12 +85,19 @@ public class MainActivity extends AppCompatActivity {
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_gallery, R.id.nav_slideshow)
+                R.id.nav_home, R.id.nav_accessibility, R.id.nav_staff_management)
                 .setOpenableLayout(drawer)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
+        View headerView = navigationView.getHeaderView(0);
+
+        // THEN initialize the views from the header
+        navUsername = headerView.findViewById(R.id.username);
+        navEmail = headerView.findViewById(R.id.navEmail);
+        //profile = headerView.findViewById(R.id.profilePicture);
+        //logoutButton = headerView.findViewById(R.id.logout);
 
 
         firebaseAuth = FirebaseAuth.getInstance();
@@ -116,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
                 .addCustomParameter("tenant", "common");
         button = findViewById(R.id.loginButton);
         button.setOnClickListener(v -> startSignInFlow());
+
         checkPendingResult();
 
         userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
@@ -162,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void startSignInFlow() {
+    public void startSignInFlow() {
             firebaseAuth
                     .startActivityForSignInWithProvider(this, provider.build())
                     .addOnSuccessListener(
@@ -179,12 +187,7 @@ public class MainActivity extends AppCompatActivity {
                                     FirebaseUser user = authResult.getUser();
                                     if(user!=null){
                                         userViewModel.setUser(user);
-                                        navUsername = findViewById(R.id.username);
-                                        navUsername.setText(user.getDisplayName());
-                                        navEmail = findViewById(R.id.navEmail);
-                                        navEmail.setText(user.getEmail());
-                                        profile = findViewById(R.id.profilePicture);
-                                        profile.setImageURI(user.getPhotoUrl());
+                                        updateUserData(user);
                                         DocumentReference docRef = db.collection("users").document(user.getUid());
                                         docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                                             @Override
@@ -192,11 +195,9 @@ public class MainActivity extends AppCompatActivity {
                                                 if(task.isSuccessful()){
                                                     DocumentSnapshot document = task.getResult();
                                                     if(document.exists()){
-                                                        fetchSchoolID(user.getUid());
                                                         Log.d(TAG, "DocumentSnapshot data: " + document.getData());
                                                     } else{
                                                         addUserToFirestore(user);
-                                                        fetchSchoolID(user.getUid());
                                                         Log.d(TAG, "No such document");
                                                     }
                                                 }else{
@@ -264,8 +265,7 @@ public class MainActivity extends AppCompatActivity {
                     if(document.exists()){
                         String id = document.getString("schoolId");
                         userViewModel.setSchoolID(id);
-                        fetchSchoolName(id);
-                        fetchYearGroups(id);
+
                         Log.d(TAG, "DocumentSnapshot data: " + document.getData());
                     } else{
                         Log.d(TAG, "No such document");
@@ -326,9 +326,16 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void signOut(){
+    public void signOut(){
         FirebaseAuth.getInstance().signOut();
+        clearData();
+
+    }
+
+    private void clearData(){
         userViewModel.setUser(null);
+        navUsername.setText("Guest");
+        navEmail.setText("Guest123");
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -347,11 +354,43 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
+
+        // Check if a user is signed in
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        userViewModel.setUser(currentUser);
+
+        if (currentUser != null) {
+            // User is logged in, update UI with their information
+            updateUserData(currentUser);
+        }
+
         if (authStateListener != null) {
             firebaseAuth.addAuthStateListener(authStateListener);
         }
     }
 
+    private void updateUserData(FirebaseUser user) {
+
+
+
+                navUsername.setText(user.getDisplayName());
+
+                navEmail.setText(user.getEmail());
+
+
+            // Fetch the data from Firestore
+            fetchSchoolID(user.getUid());
+
+            userViewModel.getSchoolID().observe(this, schoolId -> {
+                if (schoolId != null) {
+                    fetchSchoolName(schoolId);
+                    fetchYearGroups(schoolId);
+                } else {
+                    Log.d(TAG, "School ID is null, can't fetch school data");
+                }
+            });
+
+    }
     @Override
     public void onStop(){
         super.onStop();
