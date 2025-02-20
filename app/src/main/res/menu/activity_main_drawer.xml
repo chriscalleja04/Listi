@@ -7,7 +7,8 @@
         <item
             android:id="@+id/nav_home"
             android:icon="@drawable/baseline_home_filled_24"
-            android:title="@string/menu_home" />
+            android:title="@string/menu_home"
+            />
         <item
             android:id="@+id/nav_accessibility"
             android:icon="@drawable/baseline_settings_accessibility_24"
@@ -16,5 +17,13 @@
             android:id="@+id/nav_staff_management"
             android:icon="@drawable/baseline_people_alt_24"
             android:title="@string/menu_staff_management" />
+        <item
+            android:id="@+id/nav_student_management"
+            android:icon="@drawable/baseline_school_24"
+            android:title="@string/menu_student_management"/>
+
+
     </group>
+
+
 </menu>

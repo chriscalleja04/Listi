@@ -17,6 +17,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.TaskCompletionSource;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.navigation.NavigationView;
 
@@ -35,6 +36,7 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.OAuthProvider;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -67,7 +69,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -80,14 +81,17 @@ public class MainActivity extends AppCompatActivity {
                         .setAnchorView(R.id.fab).show();
             }
         });
+
         DrawerLayout drawer = binding.drawerLayout;
         NavigationView navigationView = binding.navView;
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_accessibility, R.id.nav_staff_management)
+                R.id.nav_home, R.id.nav_accessibility)
                 .setOpenableLayout(drawer)
                 .build();
+        // Passing each menu ID as a set of Ids because each
+        // menu should be considered as top level destinations.
+
+
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
@@ -106,11 +110,15 @@ public class MainActivity extends AppCompatActivity {
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = firebaseAuth.getCurrentUser();
                 if (user != null) {
+                    fetchRoles(user.getUid());
+
                     // User is signed in
                     Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
                 } else {
                     // User is signed out
                     Log.d(TAG, "onAuthStateChanged:signed_out");
+                    updateNavigationMenu("public");
+
                 }
             }
         };
@@ -120,9 +128,12 @@ public class MainActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
 
         provider = OAuthProvider.newBuilder("microsoft.com")
-                .addCustomParameter("tenant", "common");
-        button = findViewById(R.id.loginButton);
-        button.setOnClickListener(v -> startSignInFlow());
+                .addCustomParameter("ui_locales", "mt-MT")
+                .addCustomParameter("prompt", "select_account")
+                .addCustomParameter("tenant", "common")
+                .addCustomParameter("mkt", "mt-MT")
+                .addCustomParameter("locale", "mt-MT");
+
 
         checkPendingResult();
 
@@ -133,10 +144,66 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        logoutButton = findViewById(R.id.logout);
-        logoutButton.setOnClickListener(v -> signOut());
+    }
+    private void fetchRoles(String id){
+        db.collection("users")
+                .document(id)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if(task.isSuccessful()){
+                            DocumentSnapshot document = task.getResult();
+                            if(document.exists()){
+                                Log.d(TAG, "DocumentSnapshot data: " + document.getData());
+                                String role = document.getString("role");
+                                if(role!=null) {
+                                    userViewModel.setRole(role);
+                                    updateNavigationMenu(role);
 
+                                }
 
+                            }else{
+                                Log.d(TAG, "No such document");
+                            }
+                        }else{
+                            Log.d(TAG, "get failed with ", task.getException());
+
+                        }
+                    }
+                });
+
+    }
+
+    public void updateNavigationMenu(String role){
+        Menu menu = binding.navView.getMenu();
+        if(role!=null) {
+            if (role.equals("admin")) {
+                menu.findItem(R.id.nav_staff_management).setVisible(true);
+                menu.findItem(R.id.nav_student_management).setVisible(true);
+                mAppBarConfiguration = new AppBarConfiguration.Builder(
+                        R.id.nav_home, R.id.nav_accessibility, R.id.nav_staff_management, R.id.nav_student_management)
+                        .setOpenableLayout(binding.drawerLayout)
+                        .build();
+            } else if (role.equals("educator")) {
+                menu.findItem(R.id.nav_staff_management).setVisible(false);
+                menu.findItem(R.id.nav_student_management).setVisible(true);  // Show student management
+                mAppBarConfiguration = new AppBarConfiguration.Builder(
+                        R.id.nav_home, R.id.nav_accessibility, R.id.nav_student_management)
+                        .setOpenableLayout(binding.drawerLayout)
+                        .build();
+            } else{
+                // Public user only sees home and accessibility
+                menu.findItem(R.id.nav_staff_management).setVisible(false);
+                menu.findItem(R.id.nav_student_management).setVisible(false);
+                mAppBarConfiguration = new AppBarConfiguration.Builder(
+                        R.id.nav_home, R.id.nav_accessibility)
+                        .setOpenableLayout(binding.drawerLayout)
+                        .build();
+            }
+            NavigationUI.setupWithNavController(binding.navView, Navigation.findNavController(this, R.id.nav_host_fragment_content_main));
+
+        }
     }
     private void checkPendingResult() {
 
@@ -171,89 +238,133 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startSignInFlow() {
-            firebaseAuth
-                    .startActivityForSignInWithProvider(this, provider.build())
-                    .addOnSuccessListener(
-                            new OnSuccessListener<AuthResult>() {
-                                @Override
-                                public void onSuccess(AuthResult authResult) {
-                                    // User is signed in.
-                                    // IdP data available in
-                                    // authResult.getAdditionalUserInfo().getProfile().
-                                    // The OAuth access token can also be retrieved:
-                                    // ((OAuthCredential)authResult.getCredential()).getAccessToken().
-                                    // The OAuth secret can be retrieved by calling:
-                                    // ((OAuthCredential)authResult.getCredential()).getSecret().
-                                    FirebaseUser user = authResult.getUser();
-                                    if(user!=null){
-                                        userViewModel.setUser(user);
-                                        updateUserData(user);
-                                        DocumentReference docRef = db.collection("users").document(user.getUid());
-                                        docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                                            @Override
-                                            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                                                if(task.isSuccessful()){
-                                                    DocumentSnapshot document = task.getResult();
-                                                    if(document.exists()){
-                                                        Log.d(TAG, "DocumentSnapshot data: " + document.getData());
-                                                    } else{
-                                                        addUserToFirestore(user);
-                                                        Log.d(TAG, "No such document");
-                                                    }
-                                                }else{
-                                                    Log.d(TAG, "get failed with ", task.getException());
+        firebaseAuth
+                .startActivityForSignInWithProvider(this, provider.build())
+                .addOnSuccessListener(
+                        new OnSuccessListener<AuthResult>() {
+                            @Override
+                            public void onSuccess(AuthResult authResult) {
+                                // User is signed in.
+                                // IdP data available in
+                                // authResult.getAdditionalUserInfo().getProfile().
+                                // The OAuth access token can also be retrieved:
+                                // ((OAuthCredential)authResult.getCredential()).getAccessToken().
+                                // The OAuth secret can be retrieved by calling:
+                                // ((OAuthCredential)authResult.getCredential()).getSecret().
+                                FirebaseUser user = authResult.getUser();
+                                if(user!=null){
+                                    userViewModel.setUser(user);
+                                    updateUserData(user);
+                                    DocumentReference docRef = db.collection("users").document(user.getUid());
+                                    docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                            if(task.isSuccessful()){
+                                                DocumentSnapshot document = task.getResult();
+                                                if(document.exists()){
+                                                    Log.d(TAG, "DocumentSnapshot data: " + document.getData());
+                                                } else{
+                                                    addUserToFirestore(user);
+                                                    Log.d(TAG, "No such document");
                                                 }
+                                            }else{
+                                                Log.d(TAG, "get failed with ", task.getException());
                                             }
-                                        });
+                                        }
+                                    });
 
 
 
 
 
-                                    }else{
+                                }else{
 
-                                    }
                                 }
-                            })
-                    .addOnFailureListener(
-                            new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-                                    // Handle failure.
-                                }
-                            });
-
-        }
-
-
-    private void addUserToFirestore(FirebaseUser user){
-        if(user!=null){
-            String uid = user.getUid();
-            String email = user.getEmail();
-
-            Map<String, Object> userDetails = new HashMap<>();
-            userDetails.put("email", email);
-
-            db.collection("users")
-                    .document(uid)
-                    .set(userDetails)
-                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void unused) {
-                            Log.d(TAG, "DocumentSnapshot successfully written!");
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Log.w(TAG, "Error writing document", e);
-                        }
-                    });
-
-        }
+                            }
+                        })
+                .addOnFailureListener(
+                        new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                // Handle failure.
+                            }
+                        });
 
     }
 
+
+    private void addUserToFirestore(FirebaseUser user) {
+        if (user != null) {
+            String uid = user.getUid();
+            String email = user.getEmail();
+            String name = user.getDisplayName();
+
+            // Check if the user is an educator
+            checkIfEducator(email).addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    String schoolID = task.getResult();
+                    String role = null;
+                    if(schoolID!=null){
+                        role = "educator";
+                    }else{
+                        role = "public";
+                    }
+                    // Create user data
+                    Map<String, Object> userDetails = new HashMap<>();
+                    userDetails.put("email", email);
+                    userDetails.put("name", name);
+                    userDetails.put("role", role);
+                    userDetails.put("schoolId",schoolID);
+                    // Add user to Firestore
+                    db.collection("users")
+                            .document(uid)
+                            .set(userDetails)
+                            .addOnSuccessListener(unused -> {
+                                Log.d(TAG, "User added to Firestore");
+                            })
+                            .addOnFailureListener(e -> {
+                                Log.w(TAG, "Error adding user to Firestore", e);
+                            });
+                    updateNavigationMenu(role);
+
+
+                } else {
+                    Log.w(TAG, "Error checking educator status", task.getException());
+                }
+
+            });
+
+
+        }
+    }
+
+
+    public Task<String> checkIfEducator(String email) {
+        // Create a TaskCompletionSource to properly handle the async result
+        TaskCompletionSource<String> taskCompletionSource = new TaskCompletionSource<>();
+
+        db.collectionGroup("educators")
+                .whereEqualTo("email", email)
+                .limit(1)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    boolean isEducator = !querySnapshot.isEmpty();
+                    String schoolID = null;
+                    Log.d(TAG, "Educator check completed. Found: " + isEducator + " for email: " + email);
+                    if (isEducator) {
+                        DocumentSnapshot doc = querySnapshot.getDocuments().get(0);
+                        schoolID = doc.getString("schoolId");
+                        Log.d(TAG, "Found educator in path: " + doc.getReference().getPath());
+                    }
+                    taskCompletionSource.setResult(schoolID);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error checking educator status for email: " + email, e);
+                    taskCompletionSource.setException(e);
+                });
+
+        return taskCompletionSource.getTask();
+    }
 
     public void fetchSchoolID(String userID){
         DocumentReference docRef = db.collection("users").document(userID);
@@ -376,7 +487,6 @@ public class MainActivity extends AppCompatActivity {
                 navUsername.setText(user.getDisplayName());
 
                 navEmail.setText(user.getEmail());
-
 
             // Fetch the data from Firestore
             fetchSchoolID(user.getUid());

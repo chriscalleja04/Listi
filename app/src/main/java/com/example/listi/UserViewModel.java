@@ -21,6 +21,8 @@ import java.util.List;
 public class UserViewModel extends ViewModel {
     private final MutableLiveData<FirebaseUser> user = new MutableLiveData<>();
 
+    private final MutableLiveData<String> userIdEducator = new MutableLiveData<>();
+    private final MutableLiveData<String> role = new MutableLiveData<>();
     private final MutableLiveData<List<String>> yearGroups = new MutableLiveData<>();
 
     private final MutableLiveData<String> schoolName = new MutableLiveData<>();
@@ -31,6 +33,13 @@ public class UserViewModel extends ViewModel {
         this.user.setValue(user);
     }
 
+    public void setUserIdEducator(String userIdEducator){
+        this.userIdEducator.setValue(userIdEducator);
+    }
+
+    public void setRole(String role){
+        this.role.setValue(role);
+    }
     public void setSchoolName(String schoolName){
         this.schoolName.setValue(schoolName);
     }
@@ -50,7 +59,13 @@ public class UserViewModel extends ViewModel {
         return user;
     }
 
+    public LiveData<String> getUserIdEducator(){
+        return userIdEducator;
+    }
 
+    public LiveData<String> getRole(){
+        return role;
+    }
 
     public LiveData<String> getSchoolName(){
         return schoolName;
