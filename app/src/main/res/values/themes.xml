@@ -1,4 +1,4 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Base application theme with ActionBar -->
     <style name="Theme.Listi" parent="Theme.Material3.DayNight">
         <!-- Primary brand color -->
@@ -10,7 +10,7 @@
         <item name="colorOnSecondary">@color/colorOnSecondary</item>
 
         <!-- Background and Surface colors -->
-
+        <item name="android:colorBackground">@color/colorBackground</item>
         <item name="colorOnBackground">@color/colorOnBackground</item>
         <item name="colorSurface">@color/colorSurface</item>
         <item name="colorOnSurface">@color/colorOnSurface</item>
@@ -32,6 +32,7 @@
         <item name="textAppearanceSubtitle2">@style/TextAppearance.App.Subtitle2</item>
         <item name="textAppearanceButton">@style/TextAppearance.App.Button</item>
     </style>
+
 
     <style name="TextAppearance.App.Body1" parent="TextAppearance.Material3.BodyLarge">
         <item name="fontFamily">@font/app_font</item>
@@ -67,6 +68,23 @@
     <style name="NavigationDrawerText" parent="@style/TextAppearance.Material3.BodyMedium">
         <item name="fontFamily">@font/app_font</item>
         <item name="android:fontFamily">@font/app_font</item>
+        <item name="android:textColorHighlight">@color/colorPrimary</item>
+    </style>
+
+    <!-- Add this to your styles.xml -->
+    <style name="CustomNavigationViewStyle" parent="Widget.Material3.NavigationView">
+        <!-- Set the color for the selected item -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorOnPrimary">@color/colorOnPrimary</item>
+
+        <!-- Set the color for unselected items -->
+        <item name="colorSurface">@color/colorSurface</item>
+        <item name="colorOnSurface">@color/colorOnSurface</item>
+
+        <!-- Apply the colors to the NavigationView items -->
+        <item name="itemIconTint">@drawable/nav_item_icon_tint</item>
+        <item name="itemTextColor">@drawable/nav_item_text_tint</item>
+
     </style>
 
 

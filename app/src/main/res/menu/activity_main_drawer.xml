@@ -22,6 +22,12 @@
             android:icon="@drawable/baseline_school_24"
             android:title="@string/menu_student_management"/>
 
+        <item
+            android:id="@+id/nav_lists"
+            android:icon="@drawable/baseline_list_24"
+            android:title="@string/menu_lists"/>
+
+
 
     </group>
 

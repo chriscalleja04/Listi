@@ -27,4 +27,29 @@
         android:name="com.example.listi.ui.studentManagement.StudentManagementFragment"
         android:label="@string/menu_student_management"
         tools:layout="@layout/fragment_student_management" />
+
+    <fragment
+        android:id="@+id/nav_lists"
+        android:name="com.example.listi.ui.lists.ListsFragment"
+        android:label="@string/menu_lists"
+        tools:layout="@layout/fragment_lists">
+        <action
+            android:id="@+id/action_listsFragment_to_newListFragment"
+            app:destination="@+id/newListFragment"/>
+        <action
+            android:id="@+id/action_listsFragment_to_expandListFragment"
+            app:destination="@+id/expandListFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/newListFragment"
+        android:label="Lista Ġdida"
+        android:name="com.example.listi.ui.lists.NewListFragment"
+        />
+
+    <fragment
+        android:id="@+id/expandListFragment"
+        android:label="Lista"
+        android:name="com.example.listi.ui.lists.ExpandListFragment"
+        />
 </navigation>
