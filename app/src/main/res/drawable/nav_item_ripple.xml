@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/colorPrimary"> <!-- Use your primary color for the ripple -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" /> <!-- Transparent background -->
+            <corners android:radius="8dp" /> <!-- Optional: Match the corner radius -->
+        </shape>
+    </item>
+</ripple>

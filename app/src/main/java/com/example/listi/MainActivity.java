@@ -75,14 +75,7 @@
             setContentView(binding.getRoot());
 
             setSupportActionBar(binding.appBarMain.toolbar);
-            binding.appBarMain.fab.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                            .setAction("Action", null)
-                            .setAnchorView(R.id.fab).show();
-                }
-            });
+
 
             DrawerLayout drawer = binding.drawerLayout;
             NavigationView navigationView = binding.navView;
@@ -112,15 +105,17 @@
                 public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                     FirebaseUser user = firebaseAuth.getCurrentUser();
                     if (user != null) {
-                        fetchRoles(user.getUid());
-
                         // User is signed in
+                        fetchRoles(user.getUid());
                         Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
                     } else {
                         // User is signed out
                         Log.d(TAG, "onAuthStateChanged:signed_out");
-                        //updateNavigationMenu("public");
 
+                        // Update the navigation menu to the public state
+                        updateNavigationMenu("public");
+                        navUsername.setText(getResources().getText(R.string.nav_header_title));
+                        navEmail.setText(getResources().getText(R.string.nav_header_subtitle));
                     }
                 }
             };
@@ -558,8 +553,7 @@
 
         private void clearData(){
             userViewModel.setUser(null);
-            navUsername.setText("Guest");
-            navEmail.setText("Guest123");
+            updateNavigationMenu("public");
         }
         @Override
         public boolean onCreateOptionsMenu(Menu menu) {
@@ -621,5 +615,6 @@
             if(authStateListener != null){
                 firebaseAuth.removeAuthStateListener(authStateListener);
             }
+
         }
     }

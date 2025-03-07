@@ -30,7 +30,7 @@
     <color name="colorOnSurfaceVariant">#333333</color>
 
     <color name="colorDone">#C0C0C0</color>
-
+    <color name="correct">#FFFF00</color>
     <!-- Status Bar Color -->
     <color name="statusBarColor">#4A6E7A</color>
 </resources>
