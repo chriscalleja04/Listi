@@ -66,6 +66,8 @@ dependencies {
     implementation(libs.okhttp.v493)
     implementation(libs.gson)
     implementation(libs.client.sdk);
-    implementation(libs.concurrent.futures); // For ListenableFuture
-    }
+    implementation(libs.concurrent.futures);
+
+
+}
 

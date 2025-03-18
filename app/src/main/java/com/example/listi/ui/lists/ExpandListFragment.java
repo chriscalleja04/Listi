@@ -1,62 +1,104 @@
 package com.example.listi.ui.lists;
 
 import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.Log;
+import android.util.Pair;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.view.KeyEvent;
+import android.widget.TextView;
 import android.widget.Toast;
 
 
 import com.example.listi.AzureTTSHelper;
 import com.example.listi.R;
 import com.example.listi.databinding.FragmentExpandListBinding;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
 
+
 public class ExpandListFragment extends Fragment {
     private FragmentExpandListBinding binding;
-    private List<EditText> editTextList = new ArrayList<>();
+    private MediaPlayer mediaPlayer;
     private char[] letters;
     private List<String> lettersList = new ArrayList<>();
 
     private List<String> words;
+
+    private String listId;
+
+    private String listName;
+
+
+    private List<EditText> editTextList = new ArrayList<>();
+
+    private List<ImageView> tickList = new ArrayList<>();
+
+    private List<TextView> allWords = new ArrayList<>();
+    private List<TextView> allAttempts = new ArrayList<>();
+
+
+
     private int currentWordIndex = 0;
     private final int MAX_ATTEMPTS = 5;
-    private int incorrectCounter = 0;
+    private int incorrectCounter = 1;
 
     private enum Stage {PRE, LOOK, SAY, COVER, WRITE, CHECK, DONE};
 
     private Stage currentStage = Stage.LOOK;
     private Stage highestStageReached = Stage.LOOK;
 
-
     private static final String SUBSCRIPTION_KEY = "NC0lur3fQY1ba9oEOGMxUWDZf7aD6jw0KkI5b5nXdSuWAzoh1BYBJQQJ99BBACfhMk5XJ3w3AAAAACOG5tI5";
     private static final String REGION = "swedencentral";
 
     private File cachedAudioFile;
+
+    private FirebaseFirestore db;
+    private FirebaseUser currentUser;
+
+    private List<Map<String,Object>> wordAttempts = new ArrayList<>();
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -65,28 +107,49 @@ public class ExpandListFragment extends Fragment {
         // Inflate the layout for this fragment
         binding = FragmentExpandListBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
+        db = FirebaseFirestore.getInstance();
+        currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
         binding.chestClosed.setVisibility(View.VISIBLE);
         binding.chestCheck.setVisibility(View.GONE);
         binding.chestOpen.setVisibility(View.GONE);
         binding.textView.setVisibility(View.GONE);
         binding.speaker.setVisibility(View.GONE);
         binding.look.setOnClickListener(v->{
-            lookStage();
+            if(highestStageReached.equals(Stage.WRITE)){
+                Toast.makeText(getContext(), "Ipprova ikteb il-kelma qabel terġa taraha!", Toast.LENGTH_SHORT).show();
+            }else{
+                lookStage();
+            }
         });
         binding.say.setOnClickListener(v->{
-            sayStage();
+            if(highestStageReached.equals(Stage.WRITE)){
+                Toast.makeText(getContext(), "Ipprova ikteb il-kelma qabel terġa tgħidha!", Toast.LENGTH_SHORT).show();
+            }else {
+                sayStage();
+            }
         });
         binding.cover.setOnClickListener(v->{
-            coverStage();
+            if(highestStageReached.equals(Stage.WRITE)) {
+                Toast.makeText(getContext(), "Ipprova ikteb il-kelma qabel tmur lura", Toast.LENGTH_SHORT).show();
+            }else {
+                coverStage();
+            }
         });
         binding.write.setOnClickListener(v->{
             writeStage();
         });
         binding.check.setOnClickListener(v->{
-            checkStage();
+            if(highestStageReached.equals(Stage.WRITE)) {
+                Toast.makeText(getContext(), "Agħfas il-buttuna 'Kompli' biex tiċċikkeja l-kelma", Toast.LENGTH_SHORT).show();
+            }else{
+                checkStage();
+            }
         });
+        listId = getArguments() != null ? getArguments().getString("listId") : null;
+        listName = getArguments() != null ? getArguments().getString("listName") : null;
         words = getArguments() != null ? getArguments().getStringArrayList("words") : new ArrayList<>();
-
+        binding.progressText.setText("0%");
         if (words.isEmpty()) {
             return root;
         }
@@ -132,13 +195,16 @@ public class ExpandListFragment extends Fragment {
     }
 
     private void preStage(){
+        binding.tickContainer.removeAllViews();
         binding.letterContainer.removeAllViews();
         binding.chestCheck.setVisibility(View.GONE);
         binding.chestClosed.setVisibility(View.VISIBLE);
         binding.chestOpen.setVisibility(View.GONE);
         binding.textView.setVisibility(View.GONE);
         binding.speaker.setVisibility(View.GONE);
-
+        for (ImageView tick : tickList) {
+            tick.setVisibility(View.GONE);
+        }
         currentStage = Stage.LOOK;
     }
     private void lookStage() {
@@ -153,7 +219,13 @@ public class ExpandListFragment extends Fragment {
         binding.speaker.setVisibility(View.GONE);
 
         if (highestStageReached.ordinal() < Stage.SAY.ordinal()) {
-            binding.look.setTextColor(ContextCompat.getColor(getContext(), R.color.colorPrimary));
+            TypedValue outValue = new TypedValue();
+            getContext().getTheme().resolveAttribute(androidx.appcompat.R.attr.colorPrimary, outValue, true);
+            int colorPrimary = outValue.data; // This is the resolved color value
+            binding.look.setTextColor(colorPrimary);
+            Drawable drawable = binding.imageView.getDrawable();
+            drawable.setColorFilter(colorPrimary, PorterDuff.Mode.SRC_IN);
+
             highestStageReached = Stage.LOOK;
         }
         currentStage = Stage.SAY;
@@ -172,7 +244,13 @@ public class ExpandListFragment extends Fragment {
         });
 
         if (highestStageReached.ordinal() < Stage.SAY.ordinal()) {
-            binding.say.setTextColor(ContextCompat.getColor(getContext(), R.color.colorPrimary));
+            TypedValue outValue = new TypedValue();
+            getContext().getTheme().resolveAttribute(androidx.appcompat.R.attr.colorPrimary, outValue, true);
+            int colorPrimary = outValue.data; // This is the resolved color value
+            binding.say.setTextColor(colorPrimary);
+
+            Drawable drawable = binding.imageView2.getDrawable();
+            drawable.setColorFilter(colorPrimary, PorterDuff.Mode.SRC_IN);
             highestStageReached = Stage.SAY;
         }
 
@@ -191,7 +269,13 @@ public class ExpandListFragment extends Fragment {
 
 
         if (highestStageReached.ordinal() < Stage.COVER.ordinal()) {
-            binding.cover.setTextColor(ContextCompat.getColor(getContext(), R.color.colorPrimary));
+            TypedValue outValue = new TypedValue();
+            getContext().getTheme().resolveAttribute(androidx.appcompat.R.attr.colorPrimary, outValue, true);
+            int colorPrimary = outValue.data; // This is the resolved color value
+            binding.cover.setTextColor(colorPrimary);
+
+            Drawable drawable = binding.imageView3.getDrawable();
+            drawable.setColorFilter(colorPrimary, PorterDuff.Mode.SRC_IN);
             highestStageReached = Stage.COVER;
         }
 
@@ -203,16 +287,27 @@ public class ExpandListFragment extends Fragment {
         letterContainer.removeAllViews();
         editTextList.clear();
 
+        LinearLayout tickContainer = binding.tickContainer;
+        tickContainer.removeAllViews();
+        tickList.clear();
+
         String word = words.get(currentWordIndex);
+
         LinearLayout editTextRow = new LinearLayout(getContext());
         editTextRow.setOrientation(LinearLayout.HORIZONTAL);
         editTextRow.setGravity(Gravity.CENTER);
 
+        LinearLayout tickRow = new LinearLayout(getContext());
+        tickRow.setOrientation(LinearLayout.HORIZONTAL);
+        tickRow.setGravity(Gravity.CENTER);
+
+        tickList.clear();
         editTextList.clear();
 
         for (int i = 0; i < word.length(); i++) {
             // Create EditText for each letter
             EditText letterInput = new androidx.appcompat.widget.AppCompatEditText(getContext());
+
             letterInput.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
             letterInput.setImportantForAutofill(View.IMPORTANT_FOR_AUTOFILL_NO);
             letterInput.setAutofillHints(String.valueOf(View.AUTOFILL_TYPE_NONE));
@@ -287,18 +382,37 @@ public class ExpandListFragment extends Fragment {
             });
             // Add EditText and TextView to their respective rows
             editTextRow.addView(letterInput);
+
+
+            ImageView tick = new androidx.appcompat.widget.AppCompatImageView(getContext());
+            tick.setLayoutParams(new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            ));
+            tick.setImageResource(R.drawable.check_24dp_2dc937_fill0_wght400_grad0_opsz24);
+            tickList.add(tick);
+            tickRow.addView(tick);
         }
 
         // Add both rows to the main container AFTER the loop
         letterContainer.addView(editTextRow);
+        tickContainer.addView(tickRow);
 
         binding.chestClosed.setVisibility(View.GONE);
         binding.speaker.setVisibility(View.GONE);
         binding.chestOpen.setVisibility(View.VISIBLE);
         binding.textView.setVisibility(View.GONE);
-
+        binding.tickContainer.setVisibility(View.GONE);
         if (highestStageReached.ordinal() < Stage.WRITE.ordinal()) {
-            binding.write.setTextColor(ContextCompat.getColor(getContext(), R.color.colorPrimary));
+            TypedValue outValue = new TypedValue();
+            getContext().getTheme().resolveAttribute(androidx.appcompat.R.attr.colorPrimary, outValue, true);
+            int colorPrimary = outValue.data; // This is the resolved color value
+            binding.write.setTextColor(colorPrimary);
+
+            Drawable drawable = binding.imageView4.getDrawable();
+            drawable.setColorFilter(colorPrimary, PorterDuff.Mode.SRC_IN);
+
+
             highestStageReached = Stage.WRITE;
         }
 
@@ -310,6 +424,7 @@ public class ExpandListFragment extends Fragment {
     private void checkStage() {
         String currentWord = words.get(currentWordIndex);
         boolean isCorrect = validateInput(currentWord);
+        binding.tickContainer.setVisibility(View.VISIBLE);
 
         if (isCorrect) {
             binding.chestClosed.setVisibility(View.GONE);
@@ -317,10 +432,17 @@ public class ExpandListFragment extends Fragment {
             binding.speaker.setVisibility(View.GONE);
             binding.chestOpen.setVisibility(View.GONE);
             binding.textView.setVisibility(View.GONE);
-
-            incorrectCounter = 0;
+            mediaPlayer = MediaPlayer.create(getContext(), R.raw.success);
+            mediaPlayer.start();
             if (highestStageReached.ordinal() < Stage.CHECK.ordinal()) {
-                binding.check.setTextColor(ContextCompat.getColor(getContext(), R.color.colorPrimary));
+                // Resolve ?attr/colorPrimary from the current theme
+                TypedValue outValue = new TypedValue();
+                getContext().getTheme().resolveAttribute(androidx.appcompat.R.attr.colorPrimary, outValue, true);
+                int colorPrimary = outValue.data; // This is the resolved color value
+                binding.check.setTextColor(colorPrimary);
+
+                Drawable drawable = binding.imageView4.getDrawable();
+                drawable.setColorFilter(colorPrimary, PorterDuff.Mode.SRC_IN);
                 binding.look.setEnabled(false);
                 binding.say.setEnabled(false);
                 binding.cover.setEnabled(false);
@@ -330,20 +452,30 @@ public class ExpandListFragment extends Fragment {
             }
 
             currentStage = Stage.DONE;
-
+            Map<String, Object> wordAttempt = new HashMap<>();
+            wordAttempt.put("word", currentWord);
+            String incorrectCounterString = String.valueOf(incorrectCounter);
+            wordAttempt.put("attempts", incorrectCounterString);
+            wordAttempts.add(wordAttempt);
+            incorrectCounter = 1;
 
         } else {
             incorrectCounter++;
-            if(incorrectCounter<MAX_ATTEMPTS) {
+            if(incorrectCounter<=MAX_ATTEMPTS) {
                 Toast.makeText(getContext(), "Erġa pprova!", Toast.LENGTH_SHORT).show();
                 currentStage = Stage.PRE;
             }else{
-                incorrectCounter = 0;
-                Toast.makeText(getContext(), "Mexxiiii!", Toast.LENGTH_SHORT).show();
+                incorrectCounter = 1;
+                Toast.makeText(getContext(), "Ppruvajt din il-kelma ghal 5 darbiet", Toast.LENGTH_SHORT).show();
                 doneStage();
                 currentStage = Stage.PRE;
+                Map<String, Object> wordAttempt = new HashMap<>();
+                wordAttempt.put("word", currentWord);
+                wordAttempt.put("attempts", "incorrect");
+                wordAttempts.add(wordAttempt);
             }
         }
+
 
     }
 
@@ -354,19 +486,24 @@ public class ExpandListFragment extends Fragment {
         for (char letter : letters) {
             lettersList.add(String.valueOf(letter));
         }
-
         //jien - lettersList - 4, letterInput 4 - comparing each letter with input in edit texts in same index position
         for (int i = 0; i < lettersList.size(); i++) {
             String expectedLetter = lettersList.get(i);
             String input = editTextList.get(i).getText().toString();
+            binding.tickContainer.setVisibility(View.VISIBLE);
+            ImageView tick = tickList.get(i);
+
             if (expectedLetter.equals(input)) {
                 foundArray.add(true);
                 editTextList.get(i).setFocusable(false);
                 editTextList.get(i).setClickable(false);
                 editTextList.get(i).setCursorVisible(false);
                 editTextList.get(i).setBackgroundColor(Color.TRANSPARENT);
-                editTextList.get(i).setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.correct));            } else {
+                editTextList.get(i).setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.correct));
+            } else {
                 foundArray.add(false);
+                Drawable drawable = tick.getDrawable();
+                drawable.setColorFilter(Color.TRANSPARENT, PorterDuff.Mode.SRC_IN);
                 editTextList.get(i).setFocusable(false);
                 editTextList.get(i).setClickable(false);
                 editTextList.get(i).setCursorVisible(false);
@@ -382,42 +519,59 @@ public class ExpandListFragment extends Fragment {
 
             return false;
         }
+    }
+
+    private void doneStage(){
+        currentWordIndex++;
+        int percentCalc = Math.round(((float) currentWordIndex /words.size())*100);
+        String percent = percentCalc + "%";
+        if(percentCalc>=25 && percentCalc<50){
+            binding.glass.setImageResource(R.drawable.glass_25);
+            binding.progressText.setText(percent);
+        }else if(percentCalc>=50 && percentCalc<75){
+            binding.glass.setImageResource(R.drawable.glass_50);
+            binding.progressText.setText(percent);
+        }else if(percentCalc>=75 && percentCalc<100){
+            binding.glass.setImageResource(R.drawable.glass_75);
+            binding.progressText.setText(percent);
+        }else if(percentCalc==100){
+            binding.glass.setImageResource(R.drawable.glass_100);
+            binding.progressText.setText(percent);
+        }
+        if (currentWordIndex < words.size()) {
+            loadCurrentWord();
+        }else{
+            showCompletion();
+
+        }
+    }
+
+    private void loadCurrentWord() {
+        if(currentWordIndex >= words.size()) {
+            showCompletion();
+            return;
         }
 
-        private void doneStage(){
-            currentWordIndex++;
-            if (currentWordIndex < words.size()) {
-                loadCurrentWord();
-            }else{
-                showCompletion();
+        incorrectCounter = 1;
 
-            }
-        }
 
-        private void loadCurrentWord() {
-            if(currentWordIndex >= words.size()) {
-                showCompletion();
-                return;
-            }
+        resetUI();
+        String currentWord = words.get(currentWordIndex);
+        binding.textView.setText(currentWord);
+        synthesizeText(currentWord);
+        highestStageReached = Stage.LOOK;
+        binding.look.setTextColor(ContextCompat.getColor(getContext(), R.color.colorDone));
+        binding.say.setTextColor(ContextCompat.getColor(getContext(), R.color.colorDone));
+        binding.cover.setTextColor(ContextCompat.getColor(getContext(), R.color.colorDone));
+        binding.write.setTextColor(ContextCompat.getColor(getContext(), R.color.colorDone));
+        binding.check.setTextColor(ContextCompat.getColor(getContext(), R.color.colorDone));
+        updateButtonStates();
 
-            incorrectCounter = 0;
-
-            resetUI();
-            String currentWord = words.get(currentWordIndex);
-            binding.textView.setText(currentWord);
-            synthesizeText(currentWord);
-            highestStageReached = Stage.LOOK;
-            binding.look.setTextColor(ContextCompat.getColor(getContext(), R.color.colorDone));
-            binding.say.setTextColor(ContextCompat.getColor(getContext(), R.color.colorDone));
-            binding.cover.setTextColor(ContextCompat.getColor(getContext(), R.color.colorDone));
-            binding.write.setTextColor(ContextCompat.getColor(getContext(), R.color.colorDone));
-            binding.check.setTextColor(ContextCompat.getColor(getContext(), R.color.colorDone));
-            updateButtonStates();
-
-            currentStage = Stage.LOOK;
+        currentStage = Stage.LOOK;
     }
 
     private void resetUI() {
+        binding.tickContainer.removeAllViews();
         binding.letterContainer.removeAllViews();
         binding.chestCheck.setVisibility(View.GONE);
         binding.chestClosed.setVisibility(View.VISIBLE);
@@ -427,7 +581,98 @@ public class ExpandListFragment extends Fragment {
     }
 
     private void showCompletion() {
+        binding.resultsContainer.setVisibility(View.VISIBLE);
+        binding.tickContainer.removeAllViews();
+        binding.letterContainer.removeAllViews();
+        binding.chestCheck.setVisibility(View.GONE);
+        binding.chestClosed.setVisibility(View.GONE);
+        binding.chestOpen.setVisibility(View.GONE);
+        binding.textView.setVisibility(View.GONE);
+        binding.speaker.setVisibility(View.GONE);
+        binding.stagesContainer.setVisibility(View.GONE);
+        binding.progressContainer.setVisibility(View.GONE);
+        mediaPlayer = MediaPlayer.create(getContext(),R.raw.complete);
+        mediaPlayer.start();
         Toast.makeText(getContext(), "All words completed!", Toast.LENGTH_SHORT).show();
+        String email = currentUser.getEmail();
+        db.collectionGroup("students")
+                .whereEqualTo("email",email)
+                .limit(1)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            QuerySnapshot querySnapshot = task.getResult();
+                            if(querySnapshot!=null && !querySnapshot.isEmpty()){
+                                DocumentReference studentRef = querySnapshot.getDocuments().get(0).getReference();
+
+                                studentRef.collection("statistics")
+                                        .get()
+                                        .addOnCompleteListener(statisticsTask -> {
+                                            if (statisticsTask.isSuccessful()) {
+                                                QuerySnapshot statisticsSnapshot = statisticsTask.getResult();
+                                                DocumentReference statisticsDocRef;
+                                                if(statisticsSnapshot!=null && !statisticsSnapshot.isEmpty()){
+                                                    statisticsDocRef = statisticsSnapshot.getDocuments().get(0).getReference();
+                                                }else{
+                                                    statisticsDocRef = studentRef.collection("statistics").document();
+                                                    statisticsDocRef.set(new HashMap<>())
+                                                            .addOnFailureListener(e -> {
+                                                                Log.w("Firestore", "Error creating statistics document", e);
+
+                                                            });
+                                                }
+                                                CollectionReference listsSubCollectionRef = statisticsDocRef.collection(listName);
+
+                                                Map<String, Object> data = new HashMap<>();
+                                                data.put("wordAttempts", wordAttempts);
+                                                data.put("completedAt", FieldValue.serverTimestamp());
+
+                                                listsSubCollectionRef.document()
+                                                        .set(data)
+                                                        .addOnSuccessListener(aVoid -> {
+                                                            Log.d("Firestore", "Subcollection document created successfully");
+                                                        })
+                                                        .addOnFailureListener(e -> {
+                                                            Log.w("Firestore", "Error creating subcollection document", e);
+                                                        });
+
+
+
+
+                                            }
+                                        });
+
+                            }
+                        }
+                    }
+                });
+        LinearLayout wordColumn = binding.wordContainer;
+        LinearLayout attemptsColumn = binding.attemptsContainer;
+        allWords.clear();
+        allAttempts.clear();
+        for(int i = 0; i<wordAttempts.size(); i++){
+            TextView wordTextView = new TextView(getContext());
+            TextView attemptTextView = new TextView(getContext());
+
+            String word = (String) wordAttempts.get(i).get("word");
+            String attempt = (wordAttempts.get(i).get("attempts")).toString();
+
+
+            wordTextView.setText(word);
+            attemptTextView.setText(attempt);
+
+            allAttempts.add(attemptTextView);
+            attemptsColumn.addView(attemptTextView);
+            allWords.add(wordTextView);
+            wordColumn.addView(wordTextView);
+        }
+
+        binding.button.setOnClickListener(v->{
+            Navigation.findNavController(requireView()).navigate(R.id.action_expandListFragment_to_listsFragment);
+
+        });
     }
     private void synthesizeText(String word) {
         AzureTTSHelper ttsHelper = new AzureTTSHelper(SUBSCRIPTION_KEY, REGION);
@@ -458,16 +703,16 @@ public class ExpandListFragment extends Fragment {
         });
     }
     private void playAudio(File audioFile) {
-            requireActivity().runOnUiThread(() -> {
-                MediaPlayer mediaPlayer = new MediaPlayer();
-                try {
-                    mediaPlayer.setDataSource(audioFile.getAbsolutePath());
-                    mediaPlayer.prepare();
-                    mediaPlayer.start();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
+        requireActivity().runOnUiThread(() -> {
+            MediaPlayer mediaPlayer = new MediaPlayer();
+            try {
+                mediaPlayer.setDataSource(audioFile.getAbsolutePath());
+                mediaPlayer.prepare();
+                mediaPlayer.start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
     private void updateButtonStates() {
         binding.look.setEnabled(true);

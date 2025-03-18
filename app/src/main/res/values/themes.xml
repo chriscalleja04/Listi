@@ -33,7 +33,6 @@
         <item name="textAppearanceButton">@style/TextAppearance.App.Button</item>
     </style>
 
-
     <style name="TextAppearance.App.Body1" parent="TextAppearance.Material3.BodyLarge">
         <item name="fontFamily">@font/app_font</item>
         <item name="android:fontFamily">@font/app_font</item>
@@ -84,28 +83,171 @@
         <!-- Apply the colors to the NavigationView items -->
         <item name="itemIconTint">@drawable/nav_item_icon_tint</item>
         <item name="itemTextColor">@drawable/nav_item_text_tint</item>
-
     </style>
 
+    <style name="CustomNavigationViewStyle.Colour2" parent="Widget.Material3.NavigationView">
+        <!-- Set the color for the selected item -->
+        <item name="colorPrimary">@color/colorPrimary_2</item>
+        <item name="colorOnPrimary">@color/colorOnPrimary_2</item>
+        <item name="colorSurface">@color/colorSurface_2</item>
 
 
-
-
-
-
-
-
-
-
+    </style>
 
     <style name="Theme.Listi.NoActionBar" parent="Theme.Listi">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
 
-
-
-
     <style name="Theme.Listi.AppBarOverlay" parent="ThemeOverlay.Material3.Dark.ActionBar" />
     <style name="Theme.Listi.PopupOverlay" parent="ThemeOverlay.Material3.Light" />
+
+    <!-- OpenDyslexic Theme -->
+    <style name="Theme.Listi.OpenDyslexic" parent="Theme.Material3.DayNight">
+        <!-- Primary brand color -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorOnPrimary">@color/colorOnPrimary</item>
+
+        <!-- Secondary brand color -->
+        <item name="colorSecondary">@color/colorSecondary</item>
+        <item name="colorOnSecondary">@color/colorOnSecondary</item>
+
+        <!-- Background and Surface colors -->
+        <item name="android:colorBackground">@color/colorBackground</item>
+        <item name="colorOnBackground">@color/colorOnBackground</item>
+        <item name="colorSurface">@color/colorSurface</item>
+        <item name="colorOnSurface">@color/colorOnSurface</item>
+
+        <!-- Error Colors -->
+        <item name="colorError">@color/colorError</item>
+        <item name="colorOnError">@color/colorOnError</item>
+
+        <!-- Status bar color -->
+        <item name="android:statusBarColor">?attr/colorPrimary</item>
+
+        <!-- Customize your theme here -->
+        <item name="android:fontFamily">@font/open_dyslexic</item>
+        <item name="fontFamily">@font/open_dyslexic</item>
+        <item name="textAppearanceBody1">@style/TextAppearance.App.OpenDyslexic.Body1</item>
+        <item name="textAppearanceBody2">@style/TextAppearance.App.OpenDyslexic.Body2</item>
+        <item name="textAppearanceHeadline6">@style/TextAppearance.App.OpenDyslexic.Headline6</item>
+        <item name="textAppearanceSubtitle1">@style/TextAppearance.App.OpenDyslexic.Subtitle1</item>
+        <item name="textAppearanceSubtitle2">@style/TextAppearance.App.OpenDyslexic.Subtitle2</item>
+        <item name="textAppearanceButton">@style/TextAppearance.App.OpenDyslexic.Button</item>
+    </style>
+
+    <style name="TextAppearance.App.OpenDyslexic.Body1" parent="TextAppearance.Material3.BodyLarge">
+        <item name="fontFamily">@font/open_dyslexic</item>
+        <item name="android:fontFamily">@font/open_dyslexic</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="TextAppearance.App.OpenDyslexic.Body2" parent="TextAppearance.Material3.BodyMedium">
+        <item name="fontFamily">@font/open_dyslexic</item>
+        <item name="android:fontFamily">@font/open_dyslexic</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="TextAppearance.App.OpenDyslexic.Headline6" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="fontFamily">@font/open_dyslexic</item>
+        <item name="android:fontFamily">@font/open_dyslexic</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="TextAppearance.App.OpenDyslexic.Subtitle1" parent="TextAppearance.Material3.TitleMedium">
+        <item name="fontFamily">@font/open_dyslexic</item>
+        <item name="android:fontFamily">@font/open_dyslexic</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="TextAppearance.App.OpenDyslexic.Subtitle2" parent="TextAppearance.Material3.TitleSmall">
+        <item name="fontFamily">@font/open_dyslexic</item>
+        <item name="android:fontFamily">@font/open_dyslexic</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="TextAppearance.App.OpenDyslexic.Button" parent="TextAppearance.Material3.LabelMedium">
+        <item name="fontFamily">@font/open_dyslexic</item>
+        <item name="android:fontFamily">@font/open_dyslexic</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <!-- OpenDyslexic Navigation styles -->
+    <style name="NavigationDrawerText.OpenDyslexic" parent="@style/TextAppearance.Material3.BodyMedium">
+        <item name="fontFamily">@font/open_dyslexic</item>
+        <item name="android:fontFamily">@font/open_dyslexic</item>
+        <item name="android:textColorHighlight">@color/colorPrimary</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="CustomNavigationViewStyle.OpenDyslexic" parent="Widget.Material3.NavigationView">
+        <!-- Set the color for the selected item -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorOnPrimary">@color/colorOnPrimary</item>
+
+        <!-- Set the color for unselected items -->
+        <item name="colorSurface">@color/colorSurface</item>
+        <item name="colorOnSurface">@color/colorOnSurface</item>
+
+        <!-- Apply the colors to the NavigationView items -->
+        <item name="itemIconTint">@drawable/nav_item_icon_tint</item>
+        <item name="itemTextColor">@drawable/nav_item_text_tint</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="CustomNavigationViewStyle.OpenDyslexic.Color2" parent="Widget.Material3.NavigationView">
+        <item name="colorPrimary">@color/colorPrimary_2</item>
+        <item name="colorOnPrimary">@color/colorOnPrimary_2</item>
+
+        <!-- Set the color for unselected items -->
+        <item name="colorSurface">@color/colorSurface_2</item>
+
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+
+
+    <!-- OpenDyslexic Toolbar-related styles -->
+    <style name="Theme.Listi.OpenDyslexic.NoActionBar" parent="Theme.Listi.OpenDyslexic">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="Theme.Listi.OpenDyslexic.AppBarOverlay" parent="ThemeOverlay.Material3.Dark.ActionBar" />
+    <style name="Theme.Listi.OpenDyslexic.PopupOverlay" parent="ThemeOverlay.Material3.Light" />
+
+    <!--Colors-->
+    <style name="Theme.Listi.Colour2" parent="Theme.Listi">
+        <item name="colorPrimary">@color/colorPrimary_2</item>
+        <item name="colorOnPrimary">@color/colorOnPrimary_2</item>
+        <item name="android:colorBackground">@color/colorBackground_2</item>
+        <item name="colorSurface">@color/colorSurface_2</item>
+        <item name="android:textColor">@color/colorPrimary_2</item>
+
+    </style>
+
+    <!-- High Contrast NoActionBar variant -->
+    <style name="Theme.Listi.Colour2.NoActionBar" parent="Theme.Listi.Colour2">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <!-- OpenDyslexic with High Contrast -->
+    <style name="Theme.Listi.OpenDyslexic.Colour2" parent="Theme.Listi.OpenDyslexic">
+        <item name="colorPrimary">@color/colorPrimary_2</item>
+        <item name="colorOnPrimary">@color/colorOnPrimary_2</item>
+        <item name="android:colorBackground">@color/colorBackground_2</item>
+        <item name="colorSurface">@color/colorSurface_2</item>
+        <item name="android:textColor">@color/colorPrimary_2</item>
+
+
+    </style>
+
+    <!-- OpenDyslexic with High Contrast NoActionBar variant -->
+    <style name="Theme.Listi.OpenDyslexic.Colour2.NoActionBar" parent="Theme.Listi.OpenDyslexic.Colour2">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
 </resources>

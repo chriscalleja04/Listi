@@ -153,7 +153,8 @@ public class ListsFragment extends Fragment implements RecyclerViewInterface {
                                                                 .document(yearGroupId)
                                                                 .collection("classes")
                                                                 .document(classId)
-                                                                .collection("lists").orderBy("name", Query.Direction.ASCENDING)
+                                                                .collection("lists")
+                                                                .orderBy("name", Query.Direction.ASCENDING)
                                                                 .addSnapshotListener(new EventListener<QuerySnapshot>() {
                                                                     @Override
                                                                     public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
@@ -172,7 +173,10 @@ public class ListsFragment extends Fragment implements RecyclerViewInterface {
                                                                         // Process document changes
                                                                         for (DocumentChange document : value.getDocumentChanges()) {
                                                                             if (document.getType() == DocumentChange.Type.ADDED) {
-                                                                                listArrayList.add(document.getDocument().toObject(WordList.class));
+                                                                                WordList wordList = document.getDocument().toObject(WordList.class);
+                                                                                wordList.setId(document.getDocument().getId());
+                                                                                listArrayList.add(wordList);
+
                                                                             }
                                                                         }
 
@@ -215,13 +219,19 @@ public class ListsFragment extends Fragment implements RecyclerViewInterface {
         if (!listArrayList.isEmpty()) {
             WordList wordlist = listArrayList.get(position);
             ArrayList<String> words = wordlist.getWords();
+            String listId = wordlist.getId();
+            String listName = wordlist.getName();
 
             if (words != null && !words.isEmpty()) {
                 Bundle bundle = new Bundle();
                 bundle.putStringArrayList("words", words);
+                bundle.putString("listId", listId);
+                bundle.putString("listName", listName);
 
                 Navigation.findNavController(requireView()).navigate(R.id.action_listsFragment_to_expandListFragment, bundle);
             }
         }
     }
+
+
 }

@@ -33,4 +33,10 @@
     <color name="correct">#FFFF00</color>
     <!-- Status Bar Color -->
     <color name="statusBarColor">#4A6E7A</color>
+
+    <color name="colorPrimary_2">#566891</color>
+    <color name="colorOnPrimary_2">#E4EBF5</color>
+    <color name="colorBackground_2">#E4EBF5</color>
+    <color name="colorSurface_2">#E4EBF5</color>
+    <color name="transparent">#00000000</color>
 </resources>

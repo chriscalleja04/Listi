@@ -3,6 +3,7 @@
     import static android.app.PendingIntent.getActivity;
     import static android.content.ContentValues.TAG;
 
+    import android.content.Context;
     import android.os.Bundle;
     import android.util.Log;
     import android.view.View;
@@ -22,6 +23,7 @@
     import com.google.android.material.navigation.NavigationView;
 
     import androidx.annotation.NonNull;
+    import androidx.core.content.ContextCompat;
     import androidx.lifecycle.Observer;
     import androidx.lifecycle.ViewModelProvider;
     import androidx.navigation.NavController;
@@ -71,6 +73,8 @@
         @Override
         protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
+            ThemeManager.applyTheme(this);
+
             binding = ActivityMainBinding.inflate(getLayoutInflater());
             setContentView(binding.getRoot());
 
@@ -90,6 +94,8 @@
             NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
             NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
             NavigationUI.setupWithNavController(navigationView, navController);
+            configureNavigationView();
+
             View headerView = navigationView.getHeaderView(0);
 
             // THEN initialize the views from the header
@@ -561,7 +567,7 @@
             getMenuInflater().inflate(R.menu.main, menu);
             return true;
         }
-
+         
         @Override
         public boolean onSupportNavigateUp() {
             NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
@@ -608,6 +614,33 @@
                    }
                 });
 
+        }
+        private void configureNavigationView() {
+            NavigationView navigationView = binding.navView;
+            FontManager fontManager = new FontManager(this);
+            ColourManager colourManager = new ColourManager(this);
+            String fontType = fontManager.getFontType();
+            String colourType = colourManager.getColourType();
+
+            if (fontType.equals(FontManager.FONT_OPEN_DYSLEXIC)) {
+                binding.navView.setItemTextAppearance(R.style.NavigationDrawerText_OpenDyslexic);
+            } else {
+                binding.navView.setItemTextAppearance(R.style.NavigationDrawerText);
+            }
+
+            if(fontType.equals(FontManager.FONT_OPEN_DYSLEXIC)){
+                if(colourType.equals(ColourManager.COLOUR_2)){
+                    navigationView.setBackgroundColor(ContextCompat.getColor(this, R.color.colorSurface_2));
+                }else{
+                    navigationView.setBackgroundColor(ContextCompat.getColor(this, R.color.colorSurface));
+                }
+            }else {
+                if (colourType.equals(ColourManager.COLOUR_2)) {
+                    navigationView.setBackgroundColor(ContextCompat.getColor(this, R.color.colorSurface_2));
+                }else{
+                    navigationView.setBackgroundColor(ContextCompat.getColor(this, R.color.colorSurface));
+                }
+            }
         }
         @Override
         public void onStop(){

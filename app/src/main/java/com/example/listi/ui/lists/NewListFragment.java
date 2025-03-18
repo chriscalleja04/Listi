@@ -205,7 +205,7 @@ public class NewListFragment extends Fragment {
 
         // Create a new EditText
         EditText newWordInput = new EditText(requireContext());
-        newWordInput.setHint("Daħħal Kelma");
+        newWordInput.setHint("Ikteb kelma");
         newWordInput.setInputType(android.text.InputType.TYPE_CLASS_TEXT);
 
         // Apply Comic Sans font
@@ -430,7 +430,7 @@ public class NewListFragment extends Fragment {
                         .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                             @Override
                             public void onSuccess(DocumentReference documentReference) {
-                                Toast.makeText(requireContext(), "Success, List Created Successfully!", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(requireContext(), "Suċċess! Il-Lista inħalqet bla problemi", Toast.LENGTH_SHORT).show();
                                 Log.d(TAG, "DocumentSnapshot successfully written!");
                                 binding.listName.setText("");
                                 for(EditText editText:editTextList){

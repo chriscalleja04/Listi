@@ -277,7 +277,7 @@ public class StaffManagementFragment extends Fragment {
                         .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                             @Override
                             public void onSuccess(DocumentReference documentReference) {
-                                Toast.makeText(requireContext(), "Success, Educator Added Successfully!", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(requireContext(), "Suċċess! L-Edukatur inħalaq bla problemi", Toast.LENGTH_SHORT).show();
                                 Log.d(TAG, "DocumentSnapshot successfully written!");
                                 binding.educatorName.setText("");
                                 binding.educatorName.clearFocus();

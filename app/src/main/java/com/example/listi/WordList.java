@@ -7,15 +7,26 @@ public class WordList {
 
     public WordList(){}
 
-    public WordList(String name, ArrayList<String> words) {
+    public WordList(String id, String name, ArrayList<String> words) {
+        this.id = id;
         this.name = name;
         this.words = words;
+
     }
 
+    String id;
     String name;
     ArrayList<String> words;
 
 
+    public String getId() {
+        return id;
+
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
     public ArrayList<String> getWords() {
         return words;
     }

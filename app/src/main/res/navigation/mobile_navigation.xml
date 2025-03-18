@@ -26,8 +26,16 @@
         android:id="@+id/nav_student_management"
         android:name="com.example.listi.ui.studentManagement.StudentManagementFragment"
         android:label="@string/menu_student_management"
-        tools:layout="@layout/fragment_student_management" />
-
+        tools:layout="@layout/fragment_student_management">
+        <action
+            android:id="@+id/action_studentManagementFragment_to_newStudentFragment"
+            app:destination="@+id/newStudentFragment"/>
+    </fragment>
+    <fragment
+        android:id="@+id/newStudentFragment"
+        android:name="com.example.listi.ui.studentManagement.NewStudentFragment"
+        tools:layout="@layout/fragment_new_student">
+    </fragment>
     <fragment
         android:id="@+id/nav_lists"
         android:name="com.example.listi.ui.lists.ListsFragment"
@@ -50,6 +58,9 @@
     <fragment
         android:id="@+id/expandListFragment"
         android:label="Lista"
-        android:name="com.example.listi.ui.lists.ExpandListFragment"
-        />
+        android:name="com.example.listi.ui.lists.ExpandListFragment">
+    <action
+        android:id="@+id/action_expandListFragment_to_listsFragment"
+        app:destination="@+id/nav_lists"/>
+    </fragment>
 </navigation>
