@@ -58,15 +58,13 @@ dependencies {
     // Add the dependency for the Firebase SDK for Google Analytics
     implementation(libs.firebase.analytics)
     implementation(libs.material.v170rc01)
-    // TODO: Add the dependencies for any other Firebase products you want to use
-    // See https://firebase.google.com/docs/android/setup#available-libraries
-    // For example, add the dependencies for Firebase Authentication and Cloud Firestore
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.okhttp.v493)
     implementation(libs.gson)
     implementation(libs.client.sdk);
     implementation(libs.concurrent.futures);
+    implementation(libs.mpandroidchart)
 
 
 }

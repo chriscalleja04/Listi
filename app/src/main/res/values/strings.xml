@@ -14,4 +14,12 @@
     <string name="menu_accessibility">Għażliet</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="login">Login</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="or">JEW</string>
+    <string name="kompli_b_microsoft">Kompli b\'Microsoft</string>
+    <string name="profil">Profil</string>
+    <string name="register">Irreġistra</string>
+    <string name="isem">Isem</string>
 </resources>

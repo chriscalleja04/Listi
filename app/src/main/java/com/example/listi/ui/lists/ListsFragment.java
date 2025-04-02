@@ -54,14 +54,17 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.gson.Gson;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class ListsFragment extends Fragment implements RecyclerViewInterface {
+public class ListsFragment extends Fragment {
     private UserViewModel userViewModel;
     private FirebaseFirestore db;
     private FragmentListsBinding binding;
@@ -85,11 +88,13 @@ public class ListsFragment extends Fragment implements RecyclerViewInterface {
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
 
         listArrayList = new ArrayList<WordList>();
-        myAdapter = new MyAdapter(requireContext(), listArrayList, this);
+        myAdapter = new MyAdapter(requireContext(), listArrayList);
 
         binding.recyclerView.setAdapter(myAdapter);
 
         binding.floatingActionButton.setVisibility(View.GONE);
+
+
         userViewModel = new ViewModelProvider(requireActivity()).get(UserViewModel.class);
         if (userViewModel.getUser().getValue() != null) {
 
@@ -104,14 +109,15 @@ public class ListsFragment extends Fragment implements RecyclerViewInterface {
                                 DocumentSnapshot document = task.getResult();
                                 if (document.exists()) {
                                     String role = document.getString("role");
-                                    binding.floatingActionButton.setOnClickListener(v -> {
-                                        Navigation.findNavController(v).navigate(R.id.action_listsFragment_to_newListFragment);
-                                    });
+
                                     if (role != null) {
-                                        if (role.equals("admin") || role.equals("educator")) {
-                                            binding.floatingActionButton.setVisibility(View.VISIBLE);
-                                        } else {
+                                        if (role.equals("student")) {
                                             binding.floatingActionButton.setVisibility(View.GONE);
+                                        } else {
+                                            binding.floatingActionButton.setVisibility(View.VISIBLE);
+                                            binding.floatingActionButton.setOnClickListener(v -> {
+                                                Navigation.findNavController(v).navigate(R.id.action_listsFragment_to_newListFragment);
+                                            });
                                         }
 
 
@@ -204,7 +210,37 @@ public class ListsFragment extends Fragment implements RecyclerViewInterface {
                     });
         }
 
+        binding.play.setOnClickListener(v -> {
+            List<WordList> checkedLists = myAdapter.getCheckedItems();
 
+            if(checkedLists.isEmpty()){
+                Toast.makeText(requireContext(), "Agħżel mill-inqas lista waħda biex tilgħab", Toast.LENGTH_SHORT).show();
+            }else{
+                Map<String, List<String>> wordsByList = new HashMap<>();
+                for(int i = 0; i<checkedLists.size(); i++){
+                    WordList wordlist = checkedLists.get(i);
+                    List<String> words = wordlist.getWords();
+                    String id = wordlist.getId();
+                    if(words!=null && !words.isEmpty()){
+                        wordsByList.put(id, new ArrayList<>(words));
+
+                    }
+                }
+                if(wordsByList.isEmpty()) {
+                    Toast.makeText(requireContext(), "Ma nstabux kliem fil-listi magħżula", Toast.LENGTH_SHORT).show();
+                }else{
+                    Bundle bundle = new Bundle();
+                    Gson gson = new Gson();
+                    String json = gson.toJson(wordsByList);
+                    bundle.putString("wordsJson", json);
+
+                    Navigation.findNavController(requireView()).navigate(R.id.action_listsFragment_to_expandListFragment, bundle);
+
+                }
+
+            }
+
+        });
         return root;
     }
 
@@ -214,7 +250,7 @@ public class ListsFragment extends Fragment implements RecyclerViewInterface {
         binding = null;
     }
 
-    @Override
+  /*  @Override
     public void onItemClick(int position) {
         if (!listArrayList.isEmpty()) {
             WordList wordlist = listArrayList.get(position);
@@ -231,7 +267,8 @@ public class ListsFragment extends Fragment implements RecyclerViewInterface {
                 Navigation.findNavController(requireView()).navigate(R.id.action_listsFragment_to_expandListFragment, bundle);
             }
         }
-    }
+    }*/
+
 
 
 }

@@ -33,22 +33,27 @@ import android.widget.Toast;
 
 import com.example.listi.AzureTTSHelper;
 import com.example.listi.R;
+import com.example.listi.StudentList;
 import com.example.listi.databinding.FragmentExpandListBinding;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.common.reflect.TypeToken;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.gson.Gson;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -65,8 +70,13 @@ public class ExpandListFragment extends Fragment {
     private char[] letters;
     private List<String> lettersList = new ArrayList<>();
 
-    private List<String> words;
+    private Map<String, List<String>> wordsJson;
 
+    private List<String> words = new ArrayList<>();
+
+    private Map<String, String> listIdWordMap = new HashMap<>();
+
+    private String currentListId;
     private String listId;
 
     private String listName;
@@ -80,12 +90,13 @@ public class ExpandListFragment extends Fragment {
     private List<TextView> allAttempts = new ArrayList<>();
 
 
-
     private int currentWordIndex = 0;
     private final int MAX_ATTEMPTS = 5;
     private int incorrectCounter = 1;
 
-    private enum Stage {PRE, LOOK, SAY, COVER, WRITE, CHECK, DONE};
+    private enum Stage {PRE, LOOK, SAY, COVER, WRITE, CHECK, DONE}
+
+    ;
 
     private Stage currentStage = Stage.LOOK;
     private Stage highestStageReached = Stage.LOOK;
@@ -98,7 +109,11 @@ public class ExpandListFragment extends Fragment {
     private FirebaseFirestore db;
     private FirebaseUser currentUser;
 
-    private List<Map<String,Object>> wordAttempts = new ArrayList<>();
+    private List<Map<String, Object>> wordAttempts = new ArrayList<>();
+
+    private ArrayList<StudentList> studentListArray;
+
+    private StudentList studentList;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -115,40 +130,52 @@ public class ExpandListFragment extends Fragment {
         binding.chestOpen.setVisibility(View.GONE);
         binding.textView.setVisibility(View.GONE);
         binding.speaker.setVisibility(View.GONE);
-        binding.look.setOnClickListener(v->{
-            if(highestStageReached.equals(Stage.WRITE)){
+        binding.look.setOnClickListener(v -> {
+            if (highestStageReached.equals(Stage.WRITE)) {
                 Toast.makeText(getContext(), "Ipprova ikteb il-kelma qabel terġa taraha!", Toast.LENGTH_SHORT).show();
-            }else{
+            } else {
                 lookStage();
             }
         });
-        binding.say.setOnClickListener(v->{
-            if(highestStageReached.equals(Stage.WRITE)){
+        binding.say.setOnClickListener(v -> {
+            if (highestStageReached.equals(Stage.WRITE)) {
                 Toast.makeText(getContext(), "Ipprova ikteb il-kelma qabel terġa tgħidha!", Toast.LENGTH_SHORT).show();
-            }else {
+            } else {
                 sayStage();
             }
         });
-        binding.cover.setOnClickListener(v->{
-            if(highestStageReached.equals(Stage.WRITE)) {
+        binding.cover.setOnClickListener(v -> {
+            if (highestStageReached.equals(Stage.WRITE)) {
                 Toast.makeText(getContext(), "Ipprova ikteb il-kelma qabel tmur lura", Toast.LENGTH_SHORT).show();
-            }else {
+            } else {
                 coverStage();
             }
         });
-        binding.write.setOnClickListener(v->{
+        binding.write.setOnClickListener(v -> {
             writeStage();
         });
-        binding.check.setOnClickListener(v->{
-            if(highestStageReached.equals(Stage.WRITE)) {
+        binding.check.setOnClickListener(v -> {
+            if (highestStageReached.equals(Stage.WRITE)) {
                 Toast.makeText(getContext(), "Agħfas il-buttuna 'Kompli' biex tiċċikkeja l-kelma", Toast.LENGTH_SHORT).show();
-            }else{
+            } else {
                 checkStage();
             }
         });
-        listId = getArguments() != null ? getArguments().getString("listId") : null;
-        listName = getArguments() != null ? getArguments().getString("listName") : null;
-        words = getArguments() != null ? getArguments().getStringArrayList("words") : new ArrayList<>();
+
+        String json = getArguments() != null ? getArguments().getString("wordsJson") : "{}";
+        Type type = new TypeToken<Map<String, List<String>>>() {
+        }.getType();
+        wordsJson = new Gson().fromJson(json, type);
+
+        for (Map.Entry<String, List<String>> entry : wordsJson.entrySet()) {
+            String listId = entry.getKey();
+            List<String> wordsList = entry.getValue();
+            for (String word : wordsList) {
+                listIdWordMap.put(word, listId);
+                words.add(word);
+            }
+        }
+
         binding.progressText.setText("0%");
         if (words.isEmpty()) {
             return root;
@@ -194,7 +221,7 @@ public class ExpandListFragment extends Fragment {
         });
     }
 
-    private void preStage(){
+    private void preStage() {
         binding.tickContainer.removeAllViews();
         binding.letterContainer.removeAllViews();
         binding.chestCheck.setVisibility(View.GONE);
@@ -207,6 +234,7 @@ public class ExpandListFragment extends Fragment {
         }
         currentStage = Stage.LOOK;
     }
+
     private void lookStage() {
         binding.letterContainer.removeAllViews();
 
@@ -238,7 +266,7 @@ public class ExpandListFragment extends Fragment {
         binding.textView.setVisibility(View.VISIBLE);
         binding.speaker.setVisibility(View.VISIBLE);
         binding.speaker.setOnClickListener(v -> {
-            if(cachedAudioFile != null && cachedAudioFile.exists()){
+            if (cachedAudioFile != null && cachedAudioFile.exists()) {
                 playAudio(cachedAudioFile);
             }
         });
@@ -441,8 +469,9 @@ public class ExpandListFragment extends Fragment {
                 int colorPrimary = outValue.data; // This is the resolved color value
                 binding.check.setTextColor(colorPrimary);
 
-                Drawable drawable = binding.imageView4.getDrawable();
+                Drawable drawable = binding.imageView5.getDrawable();
                 drawable.setColorFilter(colorPrimary, PorterDuff.Mode.SRC_IN);
+
                 binding.look.setEnabled(false);
                 binding.say.setEnabled(false);
                 binding.cover.setEnabled(false);
@@ -456,22 +485,24 @@ public class ExpandListFragment extends Fragment {
             wordAttempt.put("word", currentWord);
             String incorrectCounterString = String.valueOf(incorrectCounter);
             wordAttempt.put("attempts", incorrectCounterString);
+            wordAttempt.put("listId", currentListId);
             wordAttempts.add(wordAttempt);
             incorrectCounter = 1;
 
         } else {
             incorrectCounter++;
-            if(incorrectCounter<=MAX_ATTEMPTS) {
+            if (incorrectCounter <= MAX_ATTEMPTS) {
                 Toast.makeText(getContext(), "Erġa pprova!", Toast.LENGTH_SHORT).show();
                 currentStage = Stage.PRE;
-            }else{
+            } else {
                 incorrectCounter = 1;
                 Toast.makeText(getContext(), "Ppruvajt din il-kelma ghal 5 darbiet", Toast.LENGTH_SHORT).show();
                 doneStage();
                 currentStage = Stage.PRE;
                 Map<String, Object> wordAttempt = new HashMap<>();
                 wordAttempt.put("word", currentWord);
-                wordAttempt.put("attempts", "incorrect");
+                wordAttempt.put("attempts", "6");
+                wordAttempt.put("listId", listId);
                 wordAttempts.add(wordAttempt);
             }
         }
@@ -521,33 +552,33 @@ public class ExpandListFragment extends Fragment {
         }
     }
 
-    private void doneStage(){
+    private void doneStage() {
         currentWordIndex++;
-        int percentCalc = Math.round(((float) currentWordIndex /words.size())*100);
+        int percentCalc = Math.round(((float) currentWordIndex / words.size()) * 100);
         String percent = percentCalc + "%";
-        if(percentCalc>=25 && percentCalc<50){
+        if (percentCalc >= 25 && percentCalc < 50) {
             binding.glass.setImageResource(R.drawable.glass_25);
             binding.progressText.setText(percent);
-        }else if(percentCalc>=50 && percentCalc<75){
+        } else if (percentCalc >= 50 && percentCalc < 75) {
             binding.glass.setImageResource(R.drawable.glass_50);
             binding.progressText.setText(percent);
-        }else if(percentCalc>=75 && percentCalc<100){
+        } else if (percentCalc >= 75 && percentCalc < 100) {
             binding.glass.setImageResource(R.drawable.glass_75);
             binding.progressText.setText(percent);
-        }else if(percentCalc==100){
+        } else if (percentCalc == 100) {
             binding.glass.setImageResource(R.drawable.glass_100);
             binding.progressText.setText(percent);
         }
         if (currentWordIndex < words.size()) {
             loadCurrentWord();
-        }else{
+        } else {
             showCompletion();
 
         }
     }
 
     private void loadCurrentWord() {
-        if(currentWordIndex >= words.size()) {
+        if (currentWordIndex >= words.size()) {
             showCompletion();
             return;
         }
@@ -557,6 +588,7 @@ public class ExpandListFragment extends Fragment {
 
         resetUI();
         String currentWord = words.get(currentWordIndex);
+        currentListId = listIdWordMap.get(currentWord);
         binding.textView.setText(currentWord);
         synthesizeText(currentWord);
         highestStageReached = Stage.LOOK;
@@ -591,63 +623,93 @@ public class ExpandListFragment extends Fragment {
         binding.speaker.setVisibility(View.GONE);
         binding.stagesContainer.setVisibility(View.GONE);
         binding.progressContainer.setVisibility(View.GONE);
-        mediaPlayer = MediaPlayer.create(getContext(),R.raw.complete);
+        mediaPlayer = MediaPlayer.create(getContext(), R.raw.complete);
         mediaPlayer.start();
         Toast.makeText(getContext(), "All words completed!", Toast.LENGTH_SHORT).show();
         String email = currentUser.getEmail();
-        db.collectionGroup("students")
-                .whereEqualTo("email",email)
-                .limit(1)
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            QuerySnapshot querySnapshot = task.getResult();
-                            if(querySnapshot!=null && !querySnapshot.isEmpty()){
-                                DocumentReference studentRef = querySnapshot.getDocuments().get(0).getReference();
+        // Group word attempts by list ID
+        Map<String, List<Map<String, Object>>> attemptsByList = new HashMap<>();
 
-                                studentRef.collection("statistics")
-                                        .get()
-                                        .addOnCompleteListener(statisticsTask -> {
-                                            if (statisticsTask.isSuccessful()) {
-                                                QuerySnapshot statisticsSnapshot = statisticsTask.getResult();
-                                                DocumentReference statisticsDocRef;
-                                                if(statisticsSnapshot!=null && !statisticsSnapshot.isEmpty()){
-                                                    statisticsDocRef = statisticsSnapshot.getDocuments().get(0).getReference();
-                                                }else{
-                                                    statisticsDocRef = studentRef.collection("statistics").document();
-                                                    statisticsDocRef.set(new HashMap<>())
-                                                            .addOnFailureListener(e -> {
-                                                                Log.w("Firestore", "Error creating statistics document", e);
+        for (Map<String, Object> attempt : wordAttempts) {
+            String listId = (String) attempt.get("listId");
+            if (!attemptsByList.containsKey(listId)) {
+                attemptsByList.put(listId, new ArrayList<>());
+            }
+            attemptsByList.get(listId).add(attempt);
+            attempt.remove("listId");
+        }
 
-                                                            });
-                                                }
-                                                CollectionReference listsSubCollectionRef = statisticsDocRef.collection(listName);
+        // For each list, fetch the list name and save attempts
+        for (String listId : attemptsByList.keySet()) {
+            List<Map<String, Object>> listAttempts = attemptsByList.get(listId);
 
-                                                Map<String, Object> data = new HashMap<>();
-                                                data.put("wordAttempts", wordAttempts);
-                                                data.put("completedAt", FieldValue.serverTimestamp());
+            // Fetch the list name from the class's lists collection
+            db.collectionGroup("students")
+                    .whereEqualTo("email", email)
+                    .limit(1)
+                    .get()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful() && !task.getResult().isEmpty()) {
+                            DocumentSnapshot studentDoc = task.getResult().getDocuments().get(0);
+                            String schoolId = studentDoc.getString("schoolId");
+                            String yearGroupId = studentDoc.getString("yearGroupId");
+                            String classId = studentDoc.getString("classId");
 
-                                                listsSubCollectionRef.document()
-                                                        .set(data)
-                                                        .addOnSuccessListener(aVoid -> {
-                                                            Log.d("Firestore", "Subcollection document created successfully");
-                                                        })
-                                                        .addOnFailureListener(e -> {
-                                                            Log.w("Firestore", "Error creating subcollection document", e);
-                                                        });
+                            // Get the list name using its ID
+                            db.collection("schools").document(schoolId)
+                                    .collection("yearGroups").document(yearGroupId)
+                                    .collection("classes").document(classId)
+                                    .collection("lists").document(listId)
+                                    .get()
+                                    .addOnCompleteListener(listTask -> {
+                                        if (listTask.isSuccessful() && listTask.getResult().exists()) {
+                                            String listName = listTask.getResult().getString("name");
 
+                                            // Now save the attempts with the correct list name
+                                            studentDoc.getReference().collection("statistics")
+                                                    .whereEqualTo("name", listName)
+                                                    .limit(1)
+                                                    .get()
+                                                    .addOnCompleteListener(statisticsTask -> {
+                                                        // The rest of your existing code for saving attempts
+                                                        if (statisticsTask.isSuccessful()) {
+                                                            QuerySnapshot statisticsSnapshot = statisticsTask.getResult();
+                                                            DocumentReference statisticsDocRef;
 
+                                                            if (statisticsSnapshot != null && !statisticsSnapshot.isEmpty()) {
+                                                                statisticsDocRef = statisticsSnapshot.getDocuments().get(0).getReference();
+                                                            } else {
+                                                                // Create a new statistics document
+                                                                statisticsDocRef = studentDoc.getReference().collection("statistics").document();
+                                                                Map<String, Object> listDetails = new HashMap<>();
+                                                                listDetails.put("name", listName);
+                                                                statisticsDocRef.set(listDetails);
+                                                            }
 
+                                                            // Add attempt to subcollection
+                                                            CollectionReference attemptsRef = statisticsDocRef.collection("attempts");
 
-                                            }
-                                        });
+                                                            Map<String, Object> data = new HashMap<>();
+                                                            data.put("wordAttempts", listAttempts);
+                                                            data.put("completedAt", FieldValue.serverTimestamp());
 
-                            }
+                                                            attemptsRef.document()
+                                                                    .set(data)
+                                                                    .addOnSuccessListener(aVoid -> {
+                                                                        Log.d("Firestore", "Subcollection document created successfully");
+                                                                    })
+                                                                    .addOnFailureListener(e -> {
+                                                                        Log.w("Firestore", "Error creating subcollection document", e);
+                                                                    });
+                                                        }
+                                                    });
+                                        }
+                                    });
                         }
-                    }
-                });
+                    });
+        }
+
+        // Rest of your completion UI code
         LinearLayout wordColumn = binding.wordContainer;
         LinearLayout attemptsColumn = binding.attemptsContainer;
         allWords.clear();

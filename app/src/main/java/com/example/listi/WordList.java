@@ -1,22 +1,25 @@
 package com.example.listi;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 public class WordList {
-
-    public WordList(){}
-
-    public WordList(String id, String name, ArrayList<String> words) {
-        this.id = id;
-        this.name = name;
-        this.words = words;
-
-    }
-
     String id;
     String name;
     ArrayList<String> words;
+
+    boolean isChecked = false;
+
+    public WordList(){}
+
+    public WordList(String id, String name, ArrayList<String> words, Boolean isChecked) {
+        this.id = id;
+        this.name = name;
+        this.words = words;
+        this.isChecked = isChecked;
+
+    }
 
 
     public String getId() {
@@ -41,5 +44,13 @@ public class WordList {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Boolean isChecked(){
+        return isChecked;
+    }
+
+    public void setChecked(boolean isChecked){
+        this.isChecked = isChecked;
     }
 }

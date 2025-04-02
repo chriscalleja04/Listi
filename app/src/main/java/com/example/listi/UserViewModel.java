@@ -35,9 +35,6 @@ public class UserViewModel extends ViewModel {
     public void setUser(FirebaseUser user){
         this.user.setValue(user);
     }
-
-
-
     public void setRole(String role){
         this.role.setValue(role);
     }

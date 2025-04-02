@@ -9,7 +9,51 @@
         android:id="@+id/nav_home"
         android:name="com.example.listi.ui.home.HomeFragment"
         android:label="@string/menu_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_homeFragment_to_authenticateFragment"
+            app:destination="@+id/nav_authentication"/>
+        <action
+            android:id="@+id/action_homeFragment_to_profileFragment"
+            app:destination="@+id/nav_profile"/>
+        <action
+            android:id="@+id/action_homeFragment_to_expandListFragment"
+            app:destination="@+id/expandListFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_authentication"
+        android:name="com.example.listi.ui.authentication.AuthenticationFragment"
+        android:label="Idħol fil-Kont tiegħek"
+        tools:layout="@layout/fragment_authentication">
+    <action
+        android:id="@+id/action_authenticateFragment_to_homeFragment"
+        app:destination="@+id/nav_home"/>
+    <action
+        android:id="@+id/action_authenticateFragment_to_registrationFragment"
+        app:destination="@+id/nav_registration"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_registration"
+        android:name="com.example.listi.ui.authentication.RegistrationFragment"
+        android:label="Irreġistra"
+        tools:layout="@layout/fragment_registration">
+    <action
+        android:id="@+id/action_registrationFragment_to_homeFragment"
+        app:destination="@+id/nav_home"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/nav_profile"
+        android:name="com.example.listi.ui.authentication.ProfileFragment"
+        android:label="Profil"
+        tools:layout="@layout/fragment_profile">
+    <action
+        android:id="@+id/action_profileFragment_to_homeFragment"
+        app:destination="@+id/nav_home"/>
+    </fragment>
+
 
     <fragment
         android:id="@+id/nav_accessibility"
@@ -30,11 +74,29 @@
         <action
             android:id="@+id/action_studentManagementFragment_to_newStudentFragment"
             app:destination="@+id/newStudentFragment"/>
+        <action
+            android:id="@+id/action_studentManagementFragment_to_studentListsFragment"
+            app:destination="@+id/studentListsFragment"/>
     </fragment>
     <fragment
         android:id="@+id/newStudentFragment"
         android:name="com.example.listi.ui.studentManagement.NewStudentFragment"
         tools:layout="@layout/fragment_new_student">
+    </fragment>
+    <fragment
+        android:id="@+id/studentListsFragment"
+        android:label="Statistika"
+        android:name="com.example.listi.ui.studentManagement.StudentListsFragment"
+        tools:layout="@layout/fragment_student_lists">
+        <action
+            android:id="@+id/action_studentListsFragment_to_expandStudentFragment"
+            app:destination="@+id/expandStudentFragment"/>
+    </fragment>
+    <fragment
+        android:id="@+id/expandStudentFragment"
+        android:label="Statistika"
+        android:name="com.example.listi.ui.studentManagement.ExpandStudentFragment"
+        tools:layout="@layout/fragment_expand_student">
     </fragment>
     <fragment
         android:id="@+id/nav_lists"

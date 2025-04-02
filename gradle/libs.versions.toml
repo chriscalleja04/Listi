@@ -16,6 +16,7 @@ constraintlayout = "2.1.4"
 lifecycleLivedataKtx = "2.6.1"
 lifecycleViewmodelKtx = "2.6.1"
 materialVersion = "1.5.0-alpha01"
+mpandroidchart = "v3.1.0"
 msal = "5.0.0"
 navigationFragment = "2.6.0"
 navigationUi = "2.6.0"
@@ -44,6 +45,7 @@ lifecycle-livedata-ktx = { group = "androidx.lifecycle", name = "lifecycle-lived
 lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
 material-v150alpha01 = { module = "com.google.android.material:material", version.ref = "materialVersion" }
 material-v170rc01 = { module = "com.google.android.material:material", version.ref = "googleMaterial" }
+mpandroidchart = { module = "com.github.PhilJay:MPAndroidChart", version.ref = "mpandroidchart" }
 msal = { module = "com.microsoft.identity.client:msal", version.ref = "msal" }
 navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment", version.ref = "navigationFragment" }
 navigation-ui = { group = "androidx.navigation", name = "navigation-ui", version.ref = "navigationUi" }
