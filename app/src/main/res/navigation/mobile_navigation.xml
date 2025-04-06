@@ -52,8 +52,23 @@
     <action
         android:id="@+id/action_profileFragment_to_homeFragment"
         app:destination="@+id/nav_home"/>
+    <action
+        android:id="@+id/action_profileFragment_to_createChildFragment"
+        app:destination="@+id/create_child_fragment"/>
+    <action
+        android:id="@+id/action_profileFragment_to_authenticateFragment"
+        app:destination="@+id/nav_authentication"/>
     </fragment>
 
+    <fragment
+        android:id="@+id/create_child_fragment"
+        android:name="com.example.listi.ui.authentication.CreateChildProfileFragment"
+        android:label="Oħloq Profil Ġdid"
+        tools:layout="@layout/fragment_accessibility">
+        <action
+            android:id="@+id/action_createChildFragment_to_homeFragment"
+            app:destination="@+id/nav_home"/>
+    </fragment>
 
     <fragment
         android:id="@+id/nav_accessibility"
@@ -109,6 +124,9 @@
         <action
             android:id="@+id/action_listsFragment_to_expandListFragment"
             app:destination="@+id/expandListFragment"/>
+        <action
+            android:id="@+id/action_listsFragment_to_homeFragment"
+            app:destination="@+id/nav_home"/>
     </fragment>
 
     <fragment

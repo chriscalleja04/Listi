@@ -10,6 +10,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
 
 import android.text.Editable;
@@ -34,6 +35,7 @@ import android.widget.Toast;
 import com.example.listi.AzureTTSHelper;
 import com.example.listi.R;
 import com.example.listi.StudentList;
+import com.example.listi.UserViewModel;
 import com.example.listi.databinding.FragmentExpandListBinding;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -115,6 +117,8 @@ public class ExpandListFragment extends Fragment {
 
     private StudentList studentList;
 
+    private UserViewModel userViewModel;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -124,6 +128,7 @@ public class ExpandListFragment extends Fragment {
         View root = binding.getRoot();
         db = FirebaseFirestore.getInstance();
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        userViewModel = new ViewModelProvider(requireActivity()).get(UserViewModel.class);
 
         binding.chestClosed.setVisibility(View.VISIBLE);
         binding.chestCheck.setVisibility(View.GONE);
@@ -643,22 +648,18 @@ public class ExpandListFragment extends Fragment {
         for (String listId : attemptsByList.keySet()) {
             List<Map<String, Object>> listAttempts = attemptsByList.get(listId);
 
-            // Fetch the list name from the class's lists collection
-            db.collectionGroup("students")
-                    .whereEqualTo("email", email)
-                    .limit(1)
-                    .get()
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful() && !task.getResult().isEmpty()) {
-                            DocumentSnapshot studentDoc = task.getResult().getDocuments().get(0);
-                            String schoolId = studentDoc.getString("schoolId");
-                            String yearGroupId = studentDoc.getString("yearGroupId");
-                            String classId = studentDoc.getString("classId");
+            userViewModel.getRole().observe(getViewLifecycleOwner(), role -> {
+                if (role.equals("public")) {
+                    userViewModel.getChildID().observe(getViewLifecycleOwner(), id -> {
+                        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+                        if (id != null && currentUser != null) {
+                            // Reference the specific child profile
+                            DocumentReference childRef = db.collection("users")
+                                    .document(currentUser.getUid())
+                                    .collection("childProfiles")
+                                    .document(id);
 
-                            // Get the list name using its ID
-                            db.collection("schools").document(schoolId)
-                                    .collection("yearGroups").document(yearGroupId)
-                                    .collection("classes").document(classId)
+                            db.collection("users").document(currentUser.getUid())
                                     .collection("lists").document(listId)
                                     .get()
                                     .addOnCompleteListener(listTask -> {
@@ -666,48 +667,110 @@ public class ExpandListFragment extends Fragment {
                                             String listName = listTask.getResult().getString("name");
 
                                             // Now save the attempts with the correct list name
-                                            studentDoc.getReference().collection("statistics")
+                                            childRef.collection("statistics")
                                                     .whereEqualTo("name", listName)
                                                     .limit(1)
                                                     .get()
                                                     .addOnCompleteListener(statisticsTask -> {
                                                         // The rest of your existing code for saving attempts
-                                                        if (statisticsTask.isSuccessful()) {
-                                                            QuerySnapshot statisticsSnapshot = statisticsTask.getResult();
-                                                            DocumentReference statisticsDocRef;
-
-                                                            if (statisticsSnapshot != null && !statisticsSnapshot.isEmpty()) {
-                                                                statisticsDocRef = statisticsSnapshot.getDocuments().get(0).getReference();
-                                                            } else {
-                                                                // Create a new statistics document
-                                                                statisticsDocRef = studentDoc.getReference().collection("statistics").document();
-                                                                Map<String, Object> listDetails = new HashMap<>();
-                                                                listDetails.put("name", listName);
-                                                                statisticsDocRef.set(listDetails);
-                                                            }
-
-                                                            // Add attempt to subcollection
-                                                            CollectionReference attemptsRef = statisticsDocRef.collection("attempts");
-
-                                                            Map<String, Object> data = new HashMap<>();
-                                                            data.put("wordAttempts", listAttempts);
-                                                            data.put("completedAt", FieldValue.serverTimestamp());
-
-                                                            attemptsRef.document()
-                                                                    .set(data)
-                                                                    .addOnSuccessListener(aVoid -> {
-                                                                        Log.d("Firestore", "Subcollection document created successfully");
-                                                                    })
-                                                                    .addOnFailureListener(e -> {
-                                                                        Log.w("Firestore", "Error creating subcollection document", e);
-                                                                    });
+                                                        DocumentReference statRef;
+                                                        if (statisticsTask.isSuccessful() && !statisticsTask.getResult().isEmpty()) {
+                                                            statRef = statisticsTask.getResult().getDocuments().get(0).getReference();
+                                                        } else {
+                                                            statRef = childRef.collection("statistics").document();
+                                                            Map<String, Object> statData = new HashMap<>();
+                                                            statData.put("name", listName);
+                                                            statRef.set(statData);
                                                         }
+
+                                                        // Add the attempt
+                                                        Map<String, Object> attemptData = new HashMap<>();
+                                                        attemptData.put("wordAttempts", listAttempts);
+                                                        attemptData.put("completedAt", FieldValue.serverTimestamp());
+
+                                                        statRef.collection("attempts")
+                                                                .add(attemptData)
+                                                                .addOnSuccessListener(aVoid -> {
+                                                                    Log.d("Firestore", "Attempt saved successfully");
+                                                                })
+                                                                .addOnFailureListener(e -> {
+                                                                    Log.w("Firestore", "Error saving attempt", e);
+                                                                });
                                                     });
                                         }
                                     });
                         }
                     });
-        }
+
+                }else if(role.equals("student")){
+                // Fetch the list name from the class's lists collection
+                db.collectionGroup("students")
+                        .whereEqualTo("email", email)
+                        .limit(1)
+                        .get()
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful() && !task.getResult().isEmpty()) {
+                                DocumentSnapshot studentDoc = task.getResult().getDocuments().get(0);
+                                String schoolId = studentDoc.getString("schoolId");
+                                String yearGroupId = studentDoc.getString("yearGroupId");
+                                String classId = studentDoc.getString("classId");
+
+                                // Get the list name using its ID
+                                db.collection("schools").document(schoolId)
+                                        .collection("yearGroups").document(yearGroupId)
+                                        .collection("classes").document(classId)
+                                        .collection("lists").document(listId)
+                                        .get()
+                                        .addOnCompleteListener(listTask -> {
+                                            if (listTask.isSuccessful() && listTask.getResult().exists()) {
+                                                String listName = listTask.getResult().getString("name");
+
+                                                // Now save the attempts with the correct list name
+                                                studentDoc.getReference().collection("statistics")
+                                                        .whereEqualTo("name", listName)
+                                                        .limit(1)
+                                                        .get()
+                                                        .addOnCompleteListener(statisticsTask -> {
+                                                            // The rest of your existing code for saving attempts
+                                                            if (statisticsTask.isSuccessful()) {
+                                                                QuerySnapshot statisticsSnapshot = statisticsTask.getResult();
+                                                                DocumentReference statisticsDocRef;
+
+                                                                if (statisticsSnapshot != null && !statisticsSnapshot.isEmpty()) {
+                                                                    statisticsDocRef = statisticsSnapshot.getDocuments().get(0).getReference();
+                                                                } else {
+                                                                    // Create a new statistics document
+                                                                    statisticsDocRef = studentDoc.getReference().collection("statistics").document();
+                                                                    Map<String, Object> listDetails = new HashMap<>();
+                                                                    listDetails.put("name", listName);
+                                                                    statisticsDocRef.set(listDetails);
+                                                                }
+
+                                                                // Add attempt to subcollection
+                                                                CollectionReference attemptsRef = statisticsDocRef.collection("attempts");
+
+                                                                Map<String, Object> data = new HashMap<>();
+                                                                data.put("wordAttempts", listAttempts);
+                                                                data.put("completedAt", FieldValue.serverTimestamp());
+
+                                                                attemptsRef.document()
+                                                                        .set(data)
+                                                                        .addOnSuccessListener(aVoid -> {
+                                                                            Log.d("Firestore", "Subcollection document created successfully");
+                                                                        })
+                                                                        .addOnFailureListener(e -> {
+                                                                            Log.w("Firestore", "Error creating subcollection document", e);
+                                                                        });
+                                                            }
+                                                        });
+                                            }
+                                        });
+                            }
+                        });
+            }
+        });
+
+    }
 
         // Rest of your completion UI code
         LinearLayout wordColumn = binding.wordContainer;

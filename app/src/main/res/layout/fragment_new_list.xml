@@ -47,6 +47,7 @@
                 android:layout_marginBottom="16dp">
 
                 <TextView
+                    android:id="@+id/sena"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Sena"
@@ -59,6 +60,7 @@
                     android:layout_marginBottom="16dp" />
 
                 <TextView
+                    android:id="@+id/klassi"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Klassi"

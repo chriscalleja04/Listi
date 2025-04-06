@@ -16,10 +16,12 @@
         <item
             android:id="@+id/nav_staff_management"
             android:icon="@drawable/baseline_people_alt_24"
+            android:visible="false"
             android:title="@string/menu_staff_management" />
         <item
             android:id="@+id/nav_student_management"
             android:icon="@drawable/baseline_school_24"
+            android:visible="false"
             android:title="@string/menu_student_management"/>
 
         <item

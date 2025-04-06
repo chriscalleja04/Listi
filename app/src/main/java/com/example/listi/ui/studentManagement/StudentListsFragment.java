@@ -25,6 +25,9 @@ import com.example.listi.UserViewModel;
 import com.example.listi.WordList;
 import com.example.listi.databinding.FragmentListsBinding;
 import com.example.listi.databinding.FragmentStudentListsBinding;
+import com.google.firebase.Firebase;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -72,50 +75,98 @@ public class StudentListsFragment extends Fragment implements RecyclerViewInterf
         String yearGroupId = userViewModel.getYearGroupID().getValue();
         String classRoomId = userViewModel.getClassRoomID().getValue();
 
-        assert schoolId != null;
-        assert yearGroupId != null;
-        assert classRoomId != null;
-        db.collection("schools")
-                .document(schoolId)
-                .collection("yearGroups")
-                .document(yearGroupId)
-                .collection("classes")
-                .document(classRoomId)
-                .collection("students")
-                .document(studentId)
-                .collection("statistics")
-                .orderBy("name", Query.Direction.ASCENDING)
-                .addSnapshotListener(new EventListener<QuerySnapshot>() {
-                    @Override
-                    public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
-                        if (error != null) {
-                            // Handle Firestore errors
-                            Log.e("Firestore error", error.getMessage());
-                            return;
-                        }
+        userViewModel.getRole().observe(getViewLifecycleOwner(), role ->{
+            if(role.equals("public")){
+                FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+                if(currentUser != null) {
+                        db.collection("users")
+                                .document(currentUser.getUid())
+                                .collection("childProfiles")
+                                .document(studentId)
+                                .collection("statistics")
+                                .orderBy("name", Query.Direction.ASCENDING)
+                                .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                                    @Override
+                                    public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+                                        if (error != null) {
+                                            // Handle Firestore errors
+                                            Log.e("Firestore error", error.getMessage());
+                                            return;
+                                        }
 
-                        // Check if the QuerySnapshot is null or empty
-                        if (value == null || value.isEmpty()) {
-                            Log.d(TAG, "No documents found in the query.");
-                            return;
-                        }
+                                        // Check if the QuerySnapshot is null or empty
+                                        if (value == null || value.isEmpty()) {
+                                            Log.d(TAG, "No documents found in the query.");
+                                            return;
+                                        }
 
-                        // Process document changes
-                        for (DocumentChange document : value.getDocumentChanges()) {
-                            if (document.getType() == DocumentChange.Type.ADDED) {
-                                StudentList studentList = document.getDocument().toObject(StudentList.class);
-                                studentList.setId(document.getDocument().getId());
-                                studentListArray.add(studentList);
+                                        // Process document changes
+                                        for (DocumentChange document : value.getDocumentChanges()) {
+                                            if (document.getType() == DocumentChange.Type.ADDED) {
+                                                StudentList studentList = document.getDocument().toObject(StudentList.class);
+                                                studentList.setId(document.getDocument().getId());
+                                                studentListArray.add(studentList);
 
-                            }
-                        }
+                                            }
+                                        }
 
-                        // Notify the adapter of data changes
-                        studentListAdapter.notifyDataSetChanged();
+                                        // Notify the adapter of data changes
+                                        studentListAdapter.notifyDataSetChanged();
+                                    }
+
+
+                                });
+
                     }
 
+            }else if(role.equals("student")){
+                assert schoolId != null;
+                assert yearGroupId != null;
+                assert classRoomId != null;
+                db.collection("schools")
+                        .document(schoolId)
+                        .collection("yearGroups")
+                        .document(yearGroupId)
+                        .collection("classes")
+                        .document(classRoomId)
+                        .collection("students")
+                        .document(studentId)
+                        .collection("statistics")
+                        .orderBy("name", Query.Direction.ASCENDING)
+                        .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                            @Override
+                            public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+                                if (error != null) {
+                                    // Handle Firestore errors
+                                    Log.e("Firestore error", error.getMessage());
+                                    return;
+                                }
 
-                });
+                                // Check if the QuerySnapshot is null or empty
+                                if (value == null || value.isEmpty()) {
+                                    Log.d(TAG, "No documents found in the query.");
+                                    return;
+                                }
+
+                                // Process document changes
+                                for (DocumentChange document : value.getDocumentChanges()) {
+                                    if (document.getType() == DocumentChange.Type.ADDED) {
+                                        StudentList studentList = document.getDocument().toObject(StudentList.class);
+                                        studentList.setId(document.getDocument().getId());
+                                        studentListArray.add(studentList);
+
+                                    }
+                                }
+
+                                // Notify the adapter of data changes
+                                studentListAdapter.notifyDataSetChanged();
+                            }
+
+
+                        });
+            }
+        });
+
         return root;
         }
 

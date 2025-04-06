@@ -28,6 +28,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.listi.MyAdapter;
+import com.example.listi.Profile;
 import com.example.listi.R;
 import com.example.listi.RecyclerViewInterface;
 import com.example.listi.UserViewModel;
@@ -92,10 +93,13 @@ public class ListsFragment extends Fragment {
 
         binding.recyclerView.setAdapter(myAdapter);
 
-        binding.floatingActionButton.setVisibility(View.GONE);
 
 
         userViewModel = new ViewModelProvider(requireActivity()).get(UserViewModel.class);
+        binding.floatingActionButton.setOnClickListener(v -> {
+            Navigation.findNavController(v).navigate(R.id.action_listsFragment_to_newListFragment);
+        });
+
         if (userViewModel.getUser().getValue() != null) {
 
             String userId = Objects.requireNonNull(userViewModel.getUser().getValue()).getUid();
@@ -111,13 +115,22 @@ public class ListsFragment extends Fragment {
                                     String role = document.getString("role");
 
                                     if (role != null) {
-                                        if (role.equals("student")) {
+                                        //binding.floatingActionButton.setVisibility(View.GONE);
+                                        if (role.equals("public")) {
+                                            userViewModel.getChildID().observe(getViewLifecycleOwner(), id -> {
+                                                if (id != null) {
+                                                    binding.floatingActionButton.setVisibility(View.GONE);
+                                                }else{
+                                                    binding.floatingActionButton.setVisibility(View.VISIBLE);
+
+                                                }
+                                            });
+                                        }
+                                        else if (role.equals("student")) {
                                             binding.floatingActionButton.setVisibility(View.GONE);
                                         } else {
                                             binding.floatingActionButton.setVisibility(View.VISIBLE);
-                                            binding.floatingActionButton.setOnClickListener(v -> {
-                                                Navigation.findNavController(v).navigate(R.id.action_listsFragment_to_newListFragment);
-                                            });
+
                                         }
 
 
@@ -131,83 +144,132 @@ public class ListsFragment extends Fragment {
                         }
                     });
 
-            db.collection("users")
-                    .document(userId)
-                    .get()
-                    .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                        @Override
-                        public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                            if (task.isSuccessful()) {
-                                DocumentSnapshot document = task.getResult();
-                                if (document.exists()) {
-                                    String email = document.getString("email");
-                                    db.collectionGroup("students")
-                                            .whereEqualTo("email", email)
-                                            .limit(1)
-                                            .get()
-                                            .addOnCompleteListener(studentTask -> {
-                                                if (studentTask.isSuccessful()) {
-                                                    QuerySnapshot studentSnapshot = studentTask.getResult();
-                                                    if (studentSnapshot != null && !studentSnapshot.isEmpty()) {
-                                                        DocumentSnapshot doc = studentSnapshot.getDocuments().get(0);
-                                                        String yearGroupId = doc.getString("yearGroupId");
-                                                        String classId = doc.getString("classId");
-                                                        String schoolId = doc.getString("schoolId");
-                                                        db.collection("schools")
-                                                                .document(schoolId)
-                                                                .collection("yearGroups")
-                                                                .document(yearGroupId)
-                                                                .collection("classes")
-                                                                .document(classId)
-                                                                .collection("lists")
-                                                                .orderBy("name", Query.Direction.ASCENDING)
-                                                                .addSnapshotListener(new EventListener<QuerySnapshot>() {
-                                                                    @Override
-                                                                    public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
-                                                                        if (error != null) {
-                                                                            // Handle Firestore errors
-                                                                            Log.e("Firestore error", error.getMessage());
-                                                                            return;
-                                                                        }
 
-                                                                        // Check if the QuerySnapshot is null or empty
-                                                                        if (value == null || value.isEmpty()) {
-                                                                            Log.d(TAG, "No documents found in the query.");
-                                                                            return;
-                                                                        }
+            userViewModel.getRole().observe(getViewLifecycleOwner(), role ->{
+                FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+                if(role.equals("public")){
+                    userViewModel.getChildID().observe(getViewLifecycleOwner(), id -> {
+                        if(id!=null){
+                            assert currentUser != null;
+                            db.collection("users")
+                                    .document(currentUser.getUid())
+                                    .collection("lists")
+                                    .orderBy("name", Query.Direction.ASCENDING)
+                                    .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                                        @Override
+                                        public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+                                            if (error != null) {
+                                                // Handle Firestore errors
+                                                Log.e("Firestore error", error.getMessage());
+                                                return;
+                                            }
 
-                                                                        // Process document changes
-                                                                        for (DocumentChange document : value.getDocumentChanges()) {
-                                                                            if (document.getType() == DocumentChange.Type.ADDED) {
-                                                                                WordList wordList = document.getDocument().toObject(WordList.class);
-                                                                                wordList.setId(document.getDocument().getId());
-                                                                                listArrayList.add(wordList);
+                                            // Check if the QuerySnapshot is null or empty
+                                            if (value == null || value.isEmpty()) {
+                                                Log.d(TAG, "No documents found in the query.");
+                                                return;
+                                            }
 
-                                                                            }
-                                                                        }
-
-                                                                        // Notify the adapter of data changes
-                                                                        myAdapter.notifyDataSetChanged();
-                                                                    }
-
-
-                                                                });
-                                                    }
-                                                } else {
-                                                    Log.d(TAG, "Error getting documents: ", task.getException());
+                                            // Process document changes
+                                            for (DocumentChange document : value.getDocumentChanges()) {
+                                                if (document.getType() == DocumentChange.Type.ADDED) {
+                                                    WordList wordList = document.getDocument().toObject(WordList.class);
+                                                    wordList.setId(document.getDocument().getId());
+                                                    listArrayList.add(wordList);
 
                                                 }
+                                            }
 
-                                            });
+                                            // Notify the adapter of data changes
+                                            myAdapter.notifyDataSetChanged();
+                                        }
 
-                                }
-                            } else {
-                                Log.d(TAG, "Error getting documents: ", task.getException());
-                            }
+
+                                    });
                         }
 
-                        ;
-                    });
+                });
+                    }else if(role.equals("student")){
+                    db.collection("users")
+                            .document(userId)
+                            .get()
+                            .addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                    if (task.isSuccessful()) {
+                                        DocumentSnapshot document = task.getResult();
+                                        if (document.exists()) {
+                                            String email = document.getString("email");
+                                            db.collectionGroup("students")
+                                                    .whereEqualTo("email", email)
+                                                    .limit(1)
+                                                    .get()
+                                                    .addOnCompleteListener(studentTask -> {
+                                                        if (studentTask.isSuccessful()) {
+                                                            QuerySnapshot studentSnapshot = studentTask.getResult();
+                                                            if (studentSnapshot != null && !studentSnapshot.isEmpty()) {
+                                                                DocumentSnapshot doc = studentSnapshot.getDocuments().get(0);
+                                                                String yearGroupId = doc.getString("yearGroupId");
+                                                                String classId = doc.getString("classId");
+                                                                String schoolId = doc.getString("schoolId");
+                                                                db.collection("schools")
+                                                                        .document(schoolId)
+                                                                        .collection("yearGroups")
+                                                                        .document(yearGroupId)
+                                                                        .collection("classes")
+                                                                        .document(classId)
+                                                                        .collection("lists")
+                                                                        .orderBy("name", Query.Direction.ASCENDING)
+                                                                        .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                                                                            @Override
+                                                                            public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+                                                                                if (error != null) {
+                                                                                    // Handle Firestore errors
+                                                                                    Log.e("Firestore error", error.getMessage());
+                                                                                    return;
+                                                                                }
+
+                                                                                // Check if the QuerySnapshot is null or empty
+                                                                                if (value == null || value.isEmpty()) {
+                                                                                    Log.d(TAG, "No documents found in the query.");
+                                                                                    return;
+                                                                                }
+
+                                                                                // Process document changes
+                                                                                for (DocumentChange document : value.getDocumentChanges()) {
+                                                                                    if (document.getType() == DocumentChange.Type.ADDED) {
+                                                                                        WordList wordList = document.getDocument().toObject(WordList.class);
+                                                                                        wordList.setId(document.getDocument().getId());
+                                                                                        listArrayList.add(wordList);
+
+                                                                                    }
+                                                                                }
+
+                                                                                // Notify the adapter of data changes
+                                                                                myAdapter.notifyDataSetChanged();
+                                                                            }
+
+
+                                                                        });
+                                                            }
+                                                        } else {
+                                                            Log.d(TAG, "Error getting documents: ", task.getException());
+
+                                                        }
+
+                                                    });
+
+                                        }
+                                    } else {
+                                        Log.d(TAG, "Error getting documents: ", task.getException());
+                                    }
+                                }
+
+                                ;
+                            });
+                }
+            });
+
         }
 
         binding.play.setOnClickListener(v -> {

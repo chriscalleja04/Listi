@@ -36,6 +36,8 @@ import com.github.mikephil.charting.interfaces.datasets.IBarDataSet;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -89,62 +91,117 @@ public class ExpandStudentFragment extends Fragment {
         String schoolId = userViewModel.getSchoolID().getValue();
         String yearGroupId = userViewModel.getYearGroupID().getValue();
         String classRoomId = userViewModel.getClassRoomID().getValue();
+        userViewModel.getRole().observe(getViewLifecycleOwner(), role -> {
+            if (role.equals("public")) {
+                FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+                if (currentUser != null) {
+                    db.collection("users")
+                            .document(currentUser.getUid())
+                            .collection("childProfiles")
+                            .document(studentId)
+                            .collection("statistics")
+                            .document(statisticsId)
+                            .collection("attempts")
+                            .orderBy("completedAt", Query.Direction.ASCENDING)
+                            .get()
+                            .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                    if (task.isSuccessful()) {
+                                        wordsList.clear();
 
-        assert schoolId != null;
-        assert yearGroupId != null;
-        assert classRoomId != null;
-        db.collection("schools")
-                .document(schoolId)
-                .collection("yearGroups")
-                .document(yearGroupId)
-                .collection("classes")
-                .document(classRoomId)
-                .collection("students")
-                .document(studentId)
-                .collection("statistics")
-                .document(statisticsId)
-                .collection("attempts")
-                .orderBy("completedAt", Query.Direction.ASCENDING)
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            wordsList.clear();
+                                        // Use a Set to prevent duplicate words
+                                        Set<String> uniqueWords = new HashSet<>();
 
-                            // Use a Set to prevent duplicate words
-                            Set<String> uniqueWords = new HashSet<>();
+                                        for (QueryDocumentSnapshot document : task.getResult()) {
 
-                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                            List<Map<String, Object>> wordAttempts = (List<Map<String, Object>>) document.get("wordAttempts");
 
-                                List<Map<String, Object>> wordAttempts = (List<Map<String, Object>>) document.get("wordAttempts");
-
-                                if (wordAttempts != null) {
-                                    for (Map<String, Object> attempt : wordAttempts) {
+                                            if (wordAttempts != null) {
+                                                for (Map<String, Object> attempt : wordAttempts) {
 
 
-                                        String word = (String) attempt.get("word");
-                                        int attempts = Integer.parseInt((String) attempt.get("attempts"));
+                                                    String word = (String) attempt.get("word");
+                                                    int attempts = Integer.parseInt((String) attempt.get("attempts"));
 
-                                        uniqueWords.add(word);
-                                        wordAttemptsMap.putIfAbsent(word, new ArrayList<>());
-                                        wordAttemptsMap.get(word).add(attempts);
+                                                    uniqueWords.add(word);
+                                                    wordAttemptsMap.putIfAbsent(word, new ArrayList<>());
+                                                    wordAttemptsMap.get(word).add(attempts);
 
 
+                                                }
+                                            }
+                                        }
+
+
+                                        wordsList = new ArrayList<>(uniqueWords);
+
+
+                                        updateChart();
                                     }
                                 }
+                            });
+
+                }
+
+            } else if (role.equals("student")) {
+                assert schoolId != null;
+                assert yearGroupId != null;
+                assert classRoomId != null;
+                db.collection("schools")
+                        .document(schoolId)
+                        .collection("yearGroups")
+                        .document(yearGroupId)
+                        .collection("classes")
+                        .document(classRoomId)
+                        .collection("students")
+                        .document(studentId)
+                        .collection("statistics")
+                        .document(statisticsId)
+                        .collection("attempts")
+                        .orderBy("completedAt", Query.Direction.ASCENDING)
+                        .get()
+                        .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                            @Override
+                            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                                if (task.isSuccessful()) {
+                                    wordsList.clear();
+
+                                    // Use a Set to prevent duplicate words
+                                    Set<String> uniqueWords = new HashSet<>();
+
+                                    for (QueryDocumentSnapshot document : task.getResult()) {
+
+                                        List<Map<String, Object>> wordAttempts = (List<Map<String, Object>>) document.get("wordAttempts");
+
+                                        if (wordAttempts != null) {
+                                            for (Map<String, Object> attempt : wordAttempts) {
+
+
+                                                String word = (String) attempt.get("word");
+                                                int attempts = Integer.parseInt((String) attempt.get("attempts"));
+
+                                                uniqueWords.add(word);
+                                                wordAttemptsMap.putIfAbsent(word, new ArrayList<>());
+                                                wordAttemptsMap.get(word).add(attempts);
+
+
+                                            }
+                                        }
+                                    }
+
+
+                                    wordsList = new ArrayList<>(uniqueWords);
+
+
+                                    updateChart();
+                                }
                             }
+                        });
+            }
 
 
-                            wordsList = new ArrayList<>(uniqueWords);
-
-
-                            updateChart();
-                        }
-                    }
-                });
-
-
+        });
 
 
 
@@ -302,6 +359,7 @@ public class ExpandStudentFragment extends Fragment {
         yAxisBar.setTextSize(15);
         yAxisBar.setXOffset(15);
         yAxisBar.setGranularity(1);
+        yAxisBar.setAxisMinimum(0.5f);
         yAxisBar.setAxisMaximum(6.05f);
         yAxisBar.setGranularityEnabled(true);
         yAxisBar.setValueFormatter(new ValueFormatter() {

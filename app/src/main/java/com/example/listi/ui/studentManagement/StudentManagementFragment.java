@@ -82,10 +82,16 @@ public class StudentManagementFragment extends Fragment implements RecyclerViewI
         db = FirebaseFirestore.getInstance();
         studentArrayList = new ArrayList<Student>();
         myStudentAdapter = new MyStudentAdapter(requireContext(), studentArrayList, this);
+        binding.recyclerView2.setAdapter(myStudentAdapter);
 
 
         userViewModel = new ViewModelProvider(requireActivity()).get(UserViewModel.class);
         yearClassRepository = new YearClassRepository(userViewModel);
+        userViewModel.getRole().observe(getViewLifecycleOwner(), role ->{
+            if(role.equals("public")) {
+                binding.floatingActionButton2.setVisibility(View.GONE);
+            }
+        });
         binding.floatingActionButton2.setOnClickListener(v -> {
             Navigation.findNavController(v).navigate(R.id.action_studentManagementFragment_to_newStudentFragment);
         });
@@ -106,6 +112,11 @@ public class StudentManagementFragment extends Fragment implements RecyclerViewI
                 yearGroupSpinner.setAdapter(adapterYearGroup);
 
                 userViewModel.getRole().observe(getViewLifecycleOwner(), role -> {
+                    if(role.equals("public")){
+                        EventChangeListener();
+                    }
+
+
                     if (role.equals("admin")) {
                         userViewModel.getYearGroups().observe(getViewLifecycleOwner(), new Observer<List<String>>() {
                             @Override
@@ -128,6 +139,9 @@ public class StudentManagementFragment extends Fragment implements RecyclerViewI
                                 }
                             }
                         });
+                    } else if (role.equals("public")){
+                        yearGroupSpinner.setVisibility(View.GONE);
+                        binding.schoolNameStudent2.setVisibility(View.GONE);
                     }
                 });
 
@@ -165,8 +179,13 @@ public class StudentManagementFragment extends Fragment implements RecyclerViewI
                                 }
                             }
                         });
+                    } else if (role.equals("public")){
+                        classRoomSpinner.setVisibility(View.GONE);
+                        binding.schoolNameStudent2.setVisibility(View.GONE);
                     }
                 });
+
+
 
                 yearGroupSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                     @Override
@@ -250,7 +269,34 @@ public class StudentManagementFragment extends Fragment implements RecyclerViewI
             }
         });
     }
+    private void EventChangeListener(){
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if(currentUser != null){
+                db.collection("users")
+                        .document(currentUser.getUid())
+                        .collection("childProfiles")
+                        .orderBy("name", Query.Direction.ASCENDING)
+                        .addSnapshotListener(new EventListener<QuerySnapshot>() {
+                            @Override
+                            public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+                                if(error != null){
+                                    Log.e("Firestore error", Objects.requireNonNull(error.getMessage()));
+                                    return;
+                                }
+                                assert value != null;
+                                for(DocumentChange document: value.getDocumentChanges()){
+                                    if(document.getType() == DocumentChange.Type.ADDED){
+                                        Student student = document.getDocument().toObject(Student.class);
+                                        student.setID(document.getDocument().getId());
+                                        studentArrayList.add(student);
+                                    }
+                                    myStudentAdapter.notifyDataSetChanged();
+                                }
+                            }
+                        });
 
+            }
+        }
 
     @Override
     public void onDestroyView() {

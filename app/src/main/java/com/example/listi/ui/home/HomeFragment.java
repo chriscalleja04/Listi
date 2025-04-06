@@ -64,7 +64,7 @@ public class HomeFragment extends Fragment {
         View root = binding.getRoot();
         db = FirebaseFirestore.getInstance();
 
-        fetchSample();
+        //fetchSample();
 
 
         userViewModel = new ViewModelProvider(requireActivity()).get(UserViewModel.class);
@@ -85,7 +85,7 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        binding.sampleContainer.setOnClickListener(new View.OnClickListener() {
+      /*  binding.sampleContainer.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Bundle bundle = new Bundle();
@@ -96,7 +96,7 @@ public class HomeFragment extends Fragment {
                 Navigation.findNavController(requireView()).navigate(R.id.action_homeFragment_to_expandListFragment, bundle);
 
             }
-        });
+        });*/
 
 
 
@@ -109,7 +109,7 @@ public class HomeFragment extends Fragment {
 
 
     }
-    private void fetchSample() {
+/*    private void fetchSample() {
         binding.progressBar2.setVisibility(View.VISIBLE);
         db.collection("sampleList")
                 .limit(1)
@@ -139,7 +139,7 @@ public class HomeFragment extends Fragment {
 
                     }
                 });
-    }
+    }*/
     @Override
     public void onDestroyView() {
         super.onDestroyView();

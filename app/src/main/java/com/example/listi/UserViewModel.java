@@ -32,6 +32,11 @@ public class UserViewModel extends ViewModel {
     private final MutableLiveData<String> yearGroupID = new MutableLiveData<>();
     private final MutableLiveData<String> classRoomID = new MutableLiveData<>();
 
+
+    private final MutableLiveData<String> childID = new MutableLiveData<>();
+    private final MutableLiveData<String> childName = new MutableLiveData<>();
+
+
     public void setUser(FirebaseUser user){
         this.user.setValue(user);
     }
@@ -69,6 +74,14 @@ public class UserViewModel extends ViewModel {
 
     public void setClassesEducator(List<String> classesEducator){
         this.classesEducator.setValue(classesEducator);
+    }
+
+    public void setChildID(String childID){
+        this.childID.setValue(childID);
+    }
+
+    public void setChildName(String childName){
+        this.childName.setValue(childName);
     }
 
     public LiveData<FirebaseUser> getUser(){
@@ -116,7 +129,8 @@ public class UserViewModel extends ViewModel {
         return classRoomID;
     }
 
+    public LiveData<String> getChildID() {return childID;}
 
-
+    public LiveData<String> getChildName() {return childName;}
 
 }

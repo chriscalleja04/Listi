@@ -8,6 +8,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -109,6 +110,11 @@ public class NewListFragment extends Fragment {
                                 }
                             }
                         });
+                    } else if (role.equals("public")){
+                        yearGroupSpinner.setVisibility(View.GONE);
+                        binding.sena.setVisibility(View.GONE);
+                        binding.schoolName.setVisibility(View.GONE);
+
                     }
                 });
 
@@ -146,6 +152,12 @@ public class NewListFragment extends Fragment {
                                 }
                             }
                         });
+                    } else if (role.equals("public")){
+                        classRoomSpinner.setVisibility(View.GONE);
+                        binding.klassi.setVisibility(View.GONE);
+                        binding.schoolName.setVisibility(View.GONE);
+
+
                     }
                 });
 
@@ -188,10 +200,21 @@ public class NewListFragment extends Fragment {
                 if (name.isEmpty()) {
                     Toast.makeText(requireContext(), "Please Enter a Name to Submit", Toast.LENGTH_SHORT).show();
                 } else {
-                    String selectedClass = classRoomSpinner.getSelectedItem().toString(); // Get selected class name
-
                     saveWords();
-                    saveNewList(name, wordsList, selectedClass); // Pass selected class name to saveNewStudent
+                    userViewModel.getRole().observe(getViewLifecycleOwner(), role ->{
+                        if(role.equals("admin") || role.equals("educator")){
+                            String selectedClass = classRoomSpinner.getSelectedItem().toString(); // Get selected class name
+                            saveNewList(name, wordsList, selectedClass); // Pass selected class name to saveNewStudent
+                        }else{
+                            if(role.equals("public")){
+                                saveNewList(name, wordsList); // Pass selected class name to saveNewStudent
+                            }
+                        }
+                    });
+
+
+
+
                 }
             }
         });
@@ -406,25 +429,64 @@ public class NewListFragment extends Fragment {
 
     // Modified saveNewStudent to accept selectedClassRoomName
     public void saveNewList(String name, List<String> wordsList, String selectedClassRoomName) {
+                fetchClassRoomIDByName(selectedClassRoomName).addOnCompleteListener(task -> { // Fetch ClassRoomID here based on name
+                    if (task.isSuccessful()) {
+                        String classRoomID = task.getResult();
+                        String schoolID = userViewModel.getSchoolID().getValue();
+                        String yearGroupID = userViewModel.getYearGroupID().getValue();
+                        Map<String, Object> listDetails = new HashMap<>();
+                        listDetails.put("name", name);
+                        listDetails.put("schoolId", schoolID);
+                        listDetails.put("classId", classRoomID);
+                        listDetails.put("words", wordsList);
+                        assert schoolID != null;
+                        assert yearGroupID != null;
+                        db.collection("schools")
+                                .document(schoolID)
+                                .collection("yearGroups")
+                                .document(yearGroupID)
+                                .collection("classes")
+                                .document(classRoomID)
+                                .collection("lists")
+                                .add(listDetails)
+                                .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                                    @Override
+                                    public void onSuccess(DocumentReference documentReference) {
+                                        Toast.makeText(requireContext(), "Suċċess! Il-Lista inħalqet bla problemi", Toast.LENGTH_SHORT).show();
+                                        Log.d(TAG, "DocumentSnapshot successfully written!");
+                                        binding.listName.setText("");
+                                        for(EditText editText:editTextList){
+                                            editText.setText("");
 
-        fetchClassRoomIDByName(selectedClassRoomName).addOnCompleteListener(task -> { // Fetch ClassRoomID here based on name
-            if (task.isSuccessful()) {
-                String classRoomID = task.getResult();
-                String schoolID = userViewModel.getSchoolID().getValue();
-                String yearGroupID = userViewModel.getYearGroupID().getValue();
+                                        }
+                                        binding.wordInputContainer.removeViews(1, binding.wordInputContainer.getChildCount()-1);
+
+                                        binding.yearGroup.setSelection(0);
+                                        binding.classSpinner.setSelection(0);
+
+                                    };
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(requireContext(), "Error adding List. Could not fetch class ID.", Toast.LENGTH_SHORT).show();
+                                    Log.e(TAG, "Error fetching ClassRoomID: ", e);
+                                });
+
+
+                    } else {
+                        Toast.makeText(requireContext(), "Could not fetch Class ID. Please try again.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+
+            }
+    public void saveNewList(String name, List<String> wordsList) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
                 Map<String, Object> listDetails = new HashMap<>();
                 listDetails.put("name", name);
-                listDetails.put("schoolId", schoolID);
-                listDetails.put("classId", classRoomID);
                 listDetails.put("words", wordsList);
-                assert schoolID != null;
-                assert yearGroupID != null;
-                db.collection("schools")
-                        .document(schoolID)
-                        .collection("yearGroups")
-                        .document(yearGroupID)
-                        .collection("classes")
-                        .document(classRoomID)
+        assert currentUser != null;
+        db.collection("users")
+                        .document(currentUser.getUid())
                         .collection("lists")
                         .add(listDetails)
                         .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
@@ -438,25 +500,18 @@ public class NewListFragment extends Fragment {
 
                                 }
                                 binding.wordInputContainer.removeViews(1, binding.wordInputContainer.getChildCount()-1);
-
-                                binding.yearGroup.setSelection(0);
-                                binding.classSpinner.setSelection(0);
-
                             };
                         })
                         .addOnFailureListener(e -> {
-                            Toast.makeText(requireContext(), "Error adding List. Could not fetch class ID.", Toast.LENGTH_SHORT).show();
-                            Log.e(TAG, "Error fetching ClassRoomID: ", e);
+                            Toast.makeText(requireContext(), "Error adding List", Toast.LENGTH_SHORT).show();
+
                         });
 
 
-            } else {
-                Toast.makeText(requireContext(), "Could not fetch Class ID. Please try again.", Toast.LENGTH_SHORT).show();
             }
-        });
 
 
-    }
+
 
     @Override
     public void onDestroyView() {

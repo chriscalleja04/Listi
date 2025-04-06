@@ -4,8 +4,10 @@
     import static android.content.ContentValues.TAG;
 
     import android.content.Context;
+    import android.content.SharedPreferences;
     import android.os.Bundle;
     import android.util.Log;
+    import android.view.MenuItem;
     import android.view.View;
     import android.view.Menu;
     import android.widget.ArrayAdapter;
@@ -111,6 +113,13 @@
             userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
             authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
+            SharedPreferences prefs = getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
+            String childId = prefs.getString("child_id", null);
+            String childName = prefs.getString("child_name", null);
+            if (childId != null && childName != null) {
+                userViewModel.setChildID(childId);
+                userViewModel.setChildName(childName);
+            }
 
             db = FirebaseFirestore.getInstance();
             authRepository = new AuthRepository();
@@ -229,9 +238,9 @@
 
         }
 
-        public void updateNavigationMenu(String role){
+        public void updateNavigationMenu(String role) {
             Menu menu = binding.navView.getMenu();
-            if(role!=null) {
+            if (role != null) {
                 if (role.equals("admin")) {
                     menu.findItem(R.id.nav_staff_management).setVisible(true);
                     menu.findItem(R.id.nav_student_management).setVisible(true);
@@ -246,25 +255,126 @@
                             R.id.nav_home, R.id.nav_accessibility, R.id.nav_student_management)
                             .setOpenableLayout(binding.drawerLayout)
                             .build();
-                } else{
-                    // Public user only sees home and accessibility
+                } else if (role.equals("public")) {
                     menu.findItem(R.id.nav_staff_management).setVisible(false);
-                    menu.findItem(R.id.nav_student_management).setVisible(false);
+                    menu.findItem(R.id.nav_student_management).setVisible(true);
+                    MenuItem menuItem = menu.findItem(R.id.nav_student_management);
+                    if (menuItem != null) {
+                        menuItem.setTitle("Statistika");
+                        menuItem.setVisible(true);
+                    }// Show student management
+                    binding.navView.setCheckedItem(R.id.nav_home);
                     mAppBarConfiguration = new AppBarConfiguration.Builder(
-                            R.id.nav_home, R.id.nav_accessibility)
+                            R.id.nav_home, R.id.nav_accessibility, R.id.nav_student_management)
                             .setOpenableLayout(binding.drawerLayout)
                             .build();
-                }
-                NavigationUI.setupWithNavController(binding.navView, Navigation.findNavController(this, R.id.nav_host_fragment_content_main));
+                    userViewModel.getChildID().observe(this, id -> {
+                        if (id != null) {
+                            menu.findItem(R.id.nav_staff_management).setVisible(false);
+                            menu.findItem(R.id.nav_student_management).setVisible(false);  // Show student management
+                            binding.navView.setCheckedItem(R.id.nav_home);
+                            mAppBarConfiguration = new AppBarConfiguration.Builder(
+                                    R.id.nav_home, R.id.nav_accessibility)
+                                    .setOpenableLayout(binding.drawerLayout)
+                                    .build();
 
-            }
+                        }
+                    });
+                            /*
+                            FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+                            if (currentUser != null) {
+                                db.collection("users")
+                                        .document(currentUser.getUid())
+                                        .collection("childProfiles")
+                                        .limit(1)
+                                        .get()
+                                        .addOnCompleteListener(task -> {
+                                            if (task.isSuccessful()) {
+                                                QuerySnapshot snapshot = task.getResult();
+                                                if (snapshot != null && !snapshot.isEmpty()) {
+                                                    menu.findItem(R.id.nav_staff_management).setVisible(false);
+                                                    menu.findItem(R.id.nav_student_management).setVisible(true);
+                                                    mAppBarConfiguration = new AppBarConfiguration.Builder(
+                                                            R.id.nav_home, R.id.nav_accessibility, R.id.nav_student_management)
+                                                            .setOpenableLayout(binding.drawerLayout)
+                                                            .build();
+
+                                                } else {
+                                                    menu.findItem(R.id.nav_staff_management).setVisible(false);
+                                                    menu.findItem(R.id.nav_student_management).setVisible(false);
+                                                    mAppBarConfiguration = new AppBarConfiguration.Builder(
+                                                            R.id.nav_home, R.id.nav_accessibility)
+                                                            .setOpenableLayout(binding.drawerLayout)
+                                                            .build();
+                                                }
+                                                NavigationUI.setupWithNavController(binding.navView, Navigation.findNavController(this, R.id.nav_host_fragment_content_main));
+                                                binding.navView.setCheckedItem(R.id.nav_home); // Explicitly set Home as selected
+                                            } else {
+                                                // Handle the error
+                                                Exception e = task.getException();
+                                                if (e != null) {
+                                                    e.printStackTrace();
+                                                }
+                                            }
+                                        });
+                            }
+                        } else {
+                            menu.findItem(R.id.nav_staff_management).setVisible(false);
+                            menu.findItem(R.id.nav_student_management).setVisible(false);
+                            mAppBarConfiguration = new AppBarConfiguration.Builder(
+                                    R.id.nav_home, R.id.nav_accessibility)
+                                    .setOpenableLayout(binding.drawerLayout)
+                                    .build();
+                            NavigationUI.setupWithNavController(binding.navView, Navigation.findNavController(this, R.id.nav_host_fragment_content_main));
+                            binding.navView.setCheckedItem(R.id.nav_home); // Explicitly set Home as selected
+                        }
+                    });*/
+                } else {
+                           // Public user only sees home and accessibility
+                           menu.findItem(R.id.nav_staff_management).setVisible(false);
+                           menu.findItem(R.id.nav_student_management).setVisible(false);
+                           mAppBarConfiguration = new AppBarConfiguration.Builder(
+                                   R.id.nav_home, R.id.nav_accessibility)
+                                   .setOpenableLayout(binding.drawerLayout)
+                                   .build();
+                           NavigationUI.setupWithNavController(binding.navView, Navigation.findNavController(this, R.id.nav_host_fragment_content_main));
+                           binding.navView.setCheckedItem(R.id.nav_home); // Explicitly set Home as selected
+                       }
+                       // Move this line inside the role checks to ensure it's called after the menu is configured
+                       // NavigationUI.setupWithNavController(binding.navView, Navigation.findNavController(this, R.id.nav_host_fragment_content_main));
+
+                }
         }
 
-        private void updateUserData(FirebaseUser user) {
+
+
+        public void updateUserData(FirebaseUser user) {
             navUsername.setText(user.getDisplayName());
             navEmail.setText(user.getEmail());
 
-            authViewModel.getSchoolID().observe(this, schoolId ->{
+            String childId = userViewModel.getChildID().getValue();
+            String childName = userViewModel.getChildName().getValue();
+
+            if(childId != null && childName != null){
+                navUsername.setText(childName);
+
+            }
+            userViewModel.getChildID().observe(this, id -> {
+                if(id!=null){
+                    String name = userViewModel.getChildName().getValue();
+                    if(name != null){
+                        navUsername.setText(name);
+                    }
+
+                }else{
+                    FirebaseUser currentUser = authRepository.getCurrentUser();
+                    if(currentUser != null){
+                        navUsername.setText(currentUser.getDisplayName());
+                    }
+                }
+            });
+
+                authViewModel.getSchoolID().observe(this, schoolId ->{
                 if(schoolId != null){
                     userViewModel.setSchoolID(schoolId);
                     yearClassRepository.fetchSchoolName(schoolId);
@@ -332,9 +442,14 @@
             FirebaseUser currentUser = authRepository.getCurrentUser();
             userViewModel.setUser(currentUser);
 
+
             if (currentUser != null) {
                 // User is logged in, update UI with their information
                 updateUserData(currentUser);
+                userViewModel.getRole().observe(this, role ->{
+                    updateNavigationMenu(role);
+
+                });
             }
         }
 
