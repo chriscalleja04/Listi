@@ -32,6 +32,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.Objects;
+
 public class AuthenticationFragment extends Fragment {
 
     private FirebaseFirestore db;
@@ -86,8 +88,11 @@ public class AuthenticationFragment extends Fragment {
             public void onClick(View view) {
                 binding.progressBar.setVisibility(View.VISIBLE);
                 String email, password;
-                email = String.valueOf(binding.email.getText());
-                password = String.valueOf(binding.password.getText());
+                email = Objects.requireNonNull(binding.email.getText())
+                        .toString()
+                        .replaceAll("\\s", "") // remove all whitespace characters
+                        .replaceAll("[^\\p{ASCII}]", ""); // remove any non-ASCII chars
+                password = Objects.requireNonNull(binding.password.getText()).toString().trim();
 
                 if (TextUtils.isEmpty(email)) {
                     Toast.makeText(requireContext(), "Daħħal Email", Toast.LENGTH_SHORT).show();

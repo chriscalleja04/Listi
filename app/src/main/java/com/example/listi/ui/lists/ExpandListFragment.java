@@ -2,13 +2,13 @@ package com.example.listi.ui.lists;
 
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import android.graphics.drawable.GradientDrawable;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.Navigation;
@@ -18,7 +18,6 @@ import android.text.InputFilter;
 import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.util.Pair;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -32,25 +31,27 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
-import com.example.listi.AzureTTSHelper;
+import com.example.listi.FontManager;
 import com.example.listi.R;
 import com.example.listi.StudentList;
 import com.example.listi.UserViewModel;
+import com.example.listi.VisualsManager;
 import com.example.listi.databinding.FragmentExpandListBinding;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.common.reflect.TypeToken;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.google.gson.Gson;
+import com.microsoft.cognitiveservices.speech.ResultReason;
+import com.microsoft.cognitiveservices.speech.SpeechConfig;
+import com.microsoft.cognitiveservices.speech.SpeechSynthesisCancellationDetails;
+import com.microsoft.cognitiveservices.speech.SpeechSynthesisResult;
+import com.microsoft.cognitiveservices.speech.SpeechSynthesizer;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -60,10 +61,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Response;
 
 
 public class ExpandListFragment extends Fragment {
@@ -79,10 +76,6 @@ public class ExpandListFragment extends Fragment {
     private Map<String, String> listIdWordMap = new HashMap<>();
 
     private String currentListId;
-    private String listId;
-
-    private String listName;
-
 
     private List<EditText> editTextList = new ArrayList<>();
 
@@ -119,6 +112,8 @@ public class ExpandListFragment extends Fragment {
 
     private UserViewModel userViewModel;
 
+    private VisualsManager visualsManager;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -129,12 +124,30 @@ public class ExpandListFragment extends Fragment {
         db = FirebaseFirestore.getInstance();
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
         userViewModel = new ViewModelProvider(requireActivity()).get(UserViewModel.class);
-
-        binding.chestClosed.setVisibility(View.VISIBLE);
-        binding.chestCheck.setVisibility(View.GONE);
-        binding.chestOpen.setVisibility(View.GONE);
+        visualsManager = new VisualsManager(requireContext());
         binding.textView.setVisibility(View.GONE);
         binding.speaker.setVisibility(View.GONE);
+        if (visualsManager.getVisualsType().equals(VisualsManager.VISUAL_1)) {
+            binding.chestClosed.setVisibility(View.VISIBLE);
+            binding.chestCheck.setVisibility(View.GONE);
+            binding.chestOpen.setVisibility(View.GONE);
+
+            binding.laptopClosed.setVisibility(View.GONE);
+            binding.laptopCheck.setVisibility(View.GONE);
+            binding.laptopOpen.setVisibility(View.GONE);
+
+        } else {
+            binding.chestClosed.setVisibility(View.GONE);
+            binding.chestCheck.setVisibility(View.GONE);
+            binding.chestOpen.setVisibility(View.GONE);
+
+            binding.laptopClosed.setVisibility(View.VISIBLE);
+            binding.laptopCheck.setVisibility(View.GONE);
+            binding.laptopOpen.setVisibility(View.GONE);
+
+
+        }
+
         binding.look.setOnClickListener(v -> {
             if (highestStageReached.equals(Stage.WRITE)) {
                 Toast.makeText(getContext(), "Ipprova ikteb il-kelma qabel terġa taraha!", Toast.LENGTH_SHORT).show();
@@ -227,13 +240,32 @@ public class ExpandListFragment extends Fragment {
     }
 
     private void preStage() {
-        binding.tickContainer.removeAllViews();
         binding.letterContainer.removeAllViews();
-        binding.chestCheck.setVisibility(View.GONE);
-        binding.chestClosed.setVisibility(View.VISIBLE);
-        binding.chestOpen.setVisibility(View.GONE);
+
         binding.textView.setVisibility(View.GONE);
         binding.speaker.setVisibility(View.GONE);
+
+        if (visualsManager.getVisualsType().equals(VisualsManager.VISUAL_1)) {
+            binding.chestCheck.setVisibility(View.GONE);
+            binding.chestClosed.setVisibility(View.VISIBLE);
+            binding.chestOpen.setVisibility(View.GONE);
+
+            binding.laptopClosed.setVisibility(View.GONE);
+            binding.laptopCheck.setVisibility(View.GONE);
+            binding.laptopOpen.setVisibility(View.GONE);
+
+        } else {
+            binding.chestClosed.setVisibility(View.GONE);
+            binding.chestCheck.setVisibility(View.GONE);
+            binding.chestOpen.setVisibility(View.GONE);
+            binding.laptopOpen.setVisibility(View.GONE);
+
+            binding.laptopClosed.setVisibility(View.VISIBLE);
+            binding.laptopCheck.setVisibility(View.GONE);
+            binding.laptopOpen.setVisibility(View.GONE);
+        }
+
+
         for (ImageView tick : tickList) {
             tick.setVisibility(View.GONE);
         }
@@ -245,9 +277,24 @@ public class ExpandListFragment extends Fragment {
 
         String currentWord = words.get(currentWordIndex);
         binding.textView.setText(currentWord);
-        binding.chestCheck.setVisibility(ViewGroup.GONE);
-        binding.chestClosed.setVisibility(View.GONE);
-        binding.chestOpen.setVisibility(View.VISIBLE);
+        if (visualsManager.getVisualsType().equals(VisualsManager.VISUAL_1)) {
+            binding.chestCheck.setVisibility(View.GONE);
+            binding.chestClosed.setVisibility(View.GONE);
+            binding.chestOpen.setVisibility(View.VISIBLE);
+
+            binding.laptopClosed.setVisibility(View.GONE);
+            binding.laptopCheck.setVisibility(View.GONE);
+            binding.laptopOpen.setVisibility(View.GONE);
+
+        } else {
+            binding.chestCheck.setVisibility(View.GONE);
+            binding.chestClosed.setVisibility(View.GONE);
+            binding.chestOpen.setVisibility(View.GONE);
+
+            binding.laptopClosed.setVisibility(View.GONE);
+            binding.laptopCheck.setVisibility(View.GONE);
+            binding.laptopOpen.setVisibility(View.VISIBLE);
+        }
         binding.textView.setVisibility(View.VISIBLE);
         binding.speaker.setVisibility(View.GONE);
 
@@ -266,14 +313,30 @@ public class ExpandListFragment extends Fragment {
     }
 
     public void sayStage() {
-        binding.chestOpen.setVisibility(View.VISIBLE);
-        binding.chestClosed.setVisibility(View.GONE);
+        if (visualsManager.getVisualsType().equals(VisualsManager.VISUAL_1)) {
+            binding.chestCheck.setVisibility(View.GONE);
+            binding.chestOpen.setVisibility(View.VISIBLE);
+            binding.chestClosed.setVisibility(View.GONE);
+
+            binding.laptopClosed.setVisibility(View.GONE);
+            binding.laptopCheck.setVisibility(View.GONE);
+            binding.laptopOpen.setVisibility(View.GONE);
+
+        } else {
+            binding.chestCheck.setVisibility(View.GONE);
+            binding.chestClosed.setVisibility(View.GONE);
+            binding.chestOpen.setVisibility(View.GONE);
+
+            binding.laptopClosed.setVisibility(View.GONE);
+            binding.laptopCheck.setVisibility(View.GONE);
+            binding.laptopOpen.setVisibility(View.VISIBLE);
+        }
+
+        String currentWord = words.get(currentWordIndex);
         binding.textView.setVisibility(View.VISIBLE);
         binding.speaker.setVisibility(View.VISIBLE);
         binding.speaker.setOnClickListener(v -> {
-            if (cachedAudioFile != null && cachedAudioFile.exists()) {
-                playAudio(cachedAudioFile);
-            }
+                synthesizeText(currentWord);
         });
 
         if (highestStageReached.ordinal() < Stage.SAY.ordinal()) {
@@ -295,8 +358,26 @@ public class ExpandListFragment extends Fragment {
 
     public void coverStage() {
         binding.letterContainer.removeAllViews();
-        binding.chestClosed.setVisibility(View.VISIBLE);
-        binding.chestOpen.setVisibility(View.GONE);
+
+        if (visualsManager.getVisualsType().equals(VisualsManager.VISUAL_1)) {
+            binding.chestCheck.setVisibility(View.GONE);
+            binding.chestClosed.setVisibility(View.VISIBLE);
+            binding.chestOpen.setVisibility(View.GONE);
+
+            binding.laptopClosed.setVisibility(View.GONE);
+            binding.laptopCheck.setVisibility(View.GONE);
+            binding.laptopOpen.setVisibility(View.GONE);
+
+        } else {
+            binding.chestCheck.setVisibility(View.GONE);
+            binding.chestClosed.setVisibility(View.GONE);
+            binding.chestOpen.setVisibility(View.GONE);
+
+            binding.laptopClosed.setVisibility(View.VISIBLE);
+            binding.laptopCheck.setVisibility(View.GONE);
+            binding.laptopOpen.setVisibility(View.GONE);
+        }
+
         binding.textView.setVisibility(View.GONE);
         binding.speaker.setVisibility(View.GONE);
 
@@ -319,9 +400,6 @@ public class ExpandListFragment extends Fragment {
         LinearLayout letterContainer = binding.letterContainer;
         letterContainer.removeAllViews();
         editTextList.clear();
-
-        LinearLayout tickContainer = binding.tickContainer;
-        tickContainer.removeAllViews();
         tickList.clear();
 
         String word = words.get(currentWordIndex);
@@ -330,17 +408,23 @@ public class ExpandListFragment extends Fragment {
         editTextRow.setOrientation(LinearLayout.HORIZONTAL);
         editTextRow.setGravity(Gravity.CENTER);
 
-        LinearLayout tickRow = new LinearLayout(getContext());
-        tickRow.setOrientation(LinearLayout.HORIZONTAL);
-        tickRow.setGravity(Gravity.CENTER);
-
-        tickList.clear();
-        editTextList.clear();
 
         for (int i = 0; i < word.length(); i++) {
+            LinearLayout letterTickPair = new LinearLayout(getContext());
+            letterTickPair.setOrientation(LinearLayout.VERTICAL);
+            letterTickPair.setGravity(Gravity.CENTER);
+            ImageView tick = new androidx.appcompat.widget.AppCompatImageView(getContext());
+            LinearLayout.LayoutParams tickParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
+            tick.setLayoutParams(tickParams);
+            tick.setImageResource(R.drawable.check_24dp_2dc937_fill0_wght400_grad0_opsz24);
+            tick.setVisibility(View.INVISIBLE);
+            tickList.add(tick);
+
             // Create EditText for each letter
             EditText letterInput = new androidx.appcompat.widget.AppCompatEditText(getContext());
-
             letterInput.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
             letterInput.setImportantForAutofill(View.IMPORTANT_FOR_AUTOFILL_NO);
             letterInput.setAutofillHints(String.valueOf(View.AUTOFILL_TYPE_NONE));
@@ -348,17 +432,18 @@ public class ExpandListFragment extends Fragment {
             letterInput.setEms(1);
             letterInput.setTextSize(18);
             //letterInput.setGravity(Gravity.CENTER);
-            letterInput.setLayoutParams(new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams letterParams = new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                     ViewGroup.LayoutParams.WRAP_CONTENT
-            ));
+            );
+            letterInput.setLayoutParams(letterParams);
             // In your EditText setup, modify the OnFocusChangeListener:
             letterInput.setOnFocusChangeListener(new View.OnFocusChangeListener() {
                 @Override
                 public void onFocusChange(View v, boolean hasFocus) {
                     if (hasFocus) {
                         // Allow focusing on the field but control cursor position
-                        letterInput.setSelection(letterInput.getText().length()); // Put cursor at the end of any existing text
+                        letterInput.setSelection(letterInput.getText().length());
                     }
                 }
             });
@@ -389,7 +474,7 @@ public class ExpandListFragment extends Fragment {
             letterInput.setCursorVisible(false);
 
             editTextList.add(letterInput);
-            final int index = i; //for text watcher
+            //final int index = i; //for text watcher
             letterInput.addTextChangedListener(new TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -413,29 +498,38 @@ public class ExpandListFragment extends Fragment {
                     }
                 }
             });
+            letterTickPair.addView(tick);
+            letterTickPair.addView(letterInput);
             // Add EditText and TextView to their respective rows
-            editTextRow.addView(letterInput);
-
-
-            ImageView tick = new androidx.appcompat.widget.AppCompatImageView(getContext());
-            tick.setLayoutParams(new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-            ));
-            tick.setImageResource(R.drawable.check_24dp_2dc937_fill0_wght400_grad0_opsz24);
-            tickList.add(tick);
-            tickRow.addView(tick);
+            editTextRow.addView(letterTickPair);
         }
 
         // Add both rows to the main container AFTER the loop
         letterContainer.addView(editTextRow);
-        tickContainer.addView(tickRow);
 
-        binding.chestClosed.setVisibility(View.GONE);
+        if (visualsManager.getVisualsType().equals(VisualsManager.VISUAL_1)) {
+            binding.chestCheck.setVisibility(View.GONE);
+            binding.chestClosed.setVisibility(View.GONE);
+            binding.chestOpen.setVisibility(View.VISIBLE);
+
+            binding.laptopClosed.setVisibility(View.GONE);
+            binding.laptopCheck.setVisibility(View.GONE);
+            binding.laptopOpen.setVisibility(View.GONE);
+
+        } else {
+            binding.chestCheck.setVisibility(View.GONE);
+            binding.chestClosed.setVisibility(View.GONE);
+            binding.chestOpen.setVisibility(View.GONE);
+
+            binding.laptopOpen.setVisibility(View.VISIBLE);
+            binding.laptopClosed.setVisibility(View.GONE);
+            binding.laptopCheck.setVisibility(View.GONE);
+        }
+
+
         binding.speaker.setVisibility(View.GONE);
-        binding.chestOpen.setVisibility(View.VISIBLE);
+
         binding.textView.setVisibility(View.GONE);
-        binding.tickContainer.setVisibility(View.GONE);
         if (highestStageReached.ordinal() < Stage.WRITE.ordinal()) {
             TypedValue outValue = new TypedValue();
             getContext().getTheme().resolveAttribute(androidx.appcompat.R.attr.colorPrimary, outValue, true);
@@ -457,11 +551,29 @@ public class ExpandListFragment extends Fragment {
     private void checkStage() {
         String currentWord = words.get(currentWordIndex);
         boolean isCorrect = validateInput(currentWord);
-        binding.tickContainer.setVisibility(View.VISIBLE);
+       // binding.tickContainer.setVisibility(View.VISIBLE);
 
         if (isCorrect) {
-            binding.chestClosed.setVisibility(View.GONE);
-            binding.chestCheck.setVisibility(View.VISIBLE);
+            if (visualsManager.getVisualsType().equals(VisualsManager.VISUAL_1)) {
+                binding.chestClosed.setVisibility(View.GONE);
+                binding.chestCheck.setVisibility(View.VISIBLE);
+                binding.chestClosed.setVisibility(View.GONE);
+
+                binding.laptopClosed.setVisibility(View.GONE);
+                binding.laptopCheck.setVisibility(View.GONE);
+                binding.laptopOpen.setVisibility(View.GONE);
+
+            } else {
+                binding.chestCheck.setVisibility(View.GONE);
+                binding.chestClosed.setVisibility(View.GONE);
+                binding.chestOpen.setVisibility(View.GONE);
+
+                binding.laptopClosed.setVisibility(View.GONE);
+                binding.laptopCheck.setVisibility(View.VISIBLE);
+                binding.laptopOpen.setVisibility(View.GONE);
+            }
+
+
             binding.speaker.setVisibility(View.GONE);
             binding.chestOpen.setVisibility(View.GONE);
             binding.textView.setVisibility(View.GONE);
@@ -492,23 +604,57 @@ public class ExpandListFragment extends Fragment {
             wordAttempt.put("attempts", incorrectCounterString);
             wordAttempt.put("listId", currentListId);
             wordAttempts.add(wordAttempt);
+
+            int nextWordIndex = currentWordIndex + 1;
+            int percentCalc = Math.round(((float) nextWordIndex / words.size()) * 100);
+            String percent = percentCalc + "%";
+            binding.progressText.setText(percent);
+
+            // Update progress visual
+            if (percentCalc >= 25 && percentCalc < 50) {
+                binding.glass.setImageResource(R.drawable.glass_25);
+            } else if (percentCalc >= 50 && percentCalc < 75) {
+                binding.glass.setImageResource(R.drawable.glass_50);
+            } else if (percentCalc >= 75 && percentCalc < 100) {
+                binding.glass.setImageResource(R.drawable.glass_75);
+            } else if (percentCalc == 100) {
+                binding.glass.setImageResource(R.drawable.glass_100);
+            }
+
             incorrectCounter = 1;
 
         } else {
             incorrectCounter++;
             if (incorrectCounter <= MAX_ATTEMPTS) {
-                Toast.makeText(getContext(), "Erġa pprova!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Erġa' pprova!", Toast.LENGTH_SHORT).show();
                 currentStage = Stage.PRE;
             } else {
                 incorrectCounter = 1;
-                Toast.makeText(getContext(), "Ppruvajt din il-kelma ghal 5 darbiet", Toast.LENGTH_SHORT).show();
-                doneStage();
-                currentStage = Stage.PRE;
+                Toast.makeText(getContext(), "Ippruvajt din il-kelma għal 5 darbiet", Toast.LENGTH_SHORT).show();
                 Map<String, Object> wordAttempt = new HashMap<>();
                 wordAttempt.put("word", currentWord);
                 wordAttempt.put("attempts", "6");
-                wordAttempt.put("listId", listId);
+                wordAttempt.put("listId", currentListId);
                 wordAttempts.add(wordAttempt);
+
+                int nextWordIndex = currentWordIndex + 1;
+                int percentCalc = Math.round(((float) nextWordIndex / words.size()) * 100);
+                String percent = percentCalc + "%";
+                binding.progressText.setText(percent);
+
+                if (percentCalc >= 25 && percentCalc < 50) {
+                    binding.glass.setImageResource(R.drawable.glass_25);
+                } else if (percentCalc >= 50 && percentCalc < 75) {
+                    binding.glass.setImageResource(R.drawable.glass_50);
+                } else if (percentCalc >= 75 && percentCalc < 100) {
+                    binding.glass.setImageResource(R.drawable.glass_75);
+                } else if (percentCalc == 100) {
+                    binding.glass.setImageResource(R.drawable.glass_100);
+                }
+
+                doneStage();
+                currentStage = Stage.PRE;
+
             }
         }
 
@@ -526,8 +672,8 @@ public class ExpandListFragment extends Fragment {
         for (int i = 0; i < lettersList.size(); i++) {
             String expectedLetter = lettersList.get(i);
             String input = editTextList.get(i).getText().toString();
-            binding.tickContainer.setVisibility(View.VISIBLE);
             ImageView tick = tickList.get(i);
+            tick.setVisibility(View.VISIBLE);
 
             if (expectedLetter.equals(input)) {
                 foundArray.add(true);
@@ -548,32 +694,12 @@ public class ExpandListFragment extends Fragment {
             }
         }
 
-        if (!foundArray.contains(false)) {
-
-            return true;
-        } else {
-
-            return false;
-        }
+        return !foundArray.contains(false);
     }
 
     private void doneStage() {
         currentWordIndex++;
-        int percentCalc = Math.round(((float) currentWordIndex / words.size()) * 100);
-        String percent = percentCalc + "%";
-        if (percentCalc >= 25 && percentCalc < 50) {
-            binding.glass.setImageResource(R.drawable.glass_25);
-            binding.progressText.setText(percent);
-        } else if (percentCalc >= 50 && percentCalc < 75) {
-            binding.glass.setImageResource(R.drawable.glass_50);
-            binding.progressText.setText(percent);
-        } else if (percentCalc >= 75 && percentCalc < 100) {
-            binding.glass.setImageResource(R.drawable.glass_75);
-            binding.progressText.setText(percent);
-        } else if (percentCalc == 100) {
-            binding.glass.setImageResource(R.drawable.glass_100);
-            binding.progressText.setText(percent);
-        }
+
         if (currentWordIndex < words.size()) {
             loadCurrentWord();
         } else {
@@ -595,7 +721,7 @@ public class ExpandListFragment extends Fragment {
         String currentWord = words.get(currentWordIndex);
         currentListId = listIdWordMap.get(currentWord);
         binding.textView.setText(currentWord);
-        synthesizeText(currentWord);
+        //synthesizeText(currentWord);
         highestStageReached = Stage.LOOK;
         binding.look.setTextColor(ContextCompat.getColor(getContext(), R.color.colorDone));
         binding.say.setTextColor(ContextCompat.getColor(getContext(), R.color.colorDone));
@@ -608,22 +734,62 @@ public class ExpandListFragment extends Fragment {
     }
 
     private void resetUI() {
-        binding.tickContainer.removeAllViews();
         binding.letterContainer.removeAllViews();
-        binding.chestCheck.setVisibility(View.GONE);
-        binding.chestClosed.setVisibility(View.VISIBLE);
-        binding.chestOpen.setVisibility(View.GONE);
+
+        if (visualsManager.getVisualsType().equals(VisualsManager.VISUAL_1)) {
+            binding.chestCheck.setVisibility(View.GONE);
+            binding.chestClosed.setVisibility(View.VISIBLE);
+            binding.chestOpen.setVisibility(View.GONE);
+
+            binding.laptopClosed.setVisibility(View.GONE);
+            binding.laptopCheck.setVisibility(View.GONE);
+            binding.laptopOpen.setVisibility(View.GONE);
+
+        } else {
+            binding.chestCheck.setVisibility(View.GONE);
+            binding.chestClosed.setVisibility(View.GONE);
+            binding.chestOpen.setVisibility(View.GONE);
+
+            binding.laptopClosed.setVisibility(View.VISIBLE);
+            binding.laptopCheck.setVisibility(View.GONE);
+            binding.laptopOpen.setVisibility(View.GONE);
+        }
+
+
+        binding.look.setTextColor(ContextCompat.getColor(getContext(), R.color.colorDone));
+        binding.say.setTextColor(ContextCompat.getColor(getContext(), R.color.colorDone));
+        binding.cover.setTextColor(ContextCompat.getColor(getContext(), R.color.colorDone));
+        binding.write.setTextColor(ContextCompat.getColor(getContext(), R.color.colorDone));
+        binding.check.setTextColor(ContextCompat.getColor(getContext(), R.color.colorDone));
+        Drawable drawable = binding.imageView.getDrawable();
+        Drawable drawable2 = binding.imageView2.getDrawable();
+        Drawable drawable3 = binding.imageView3.getDrawable();
+        Drawable drawable4 = binding.imageView4.getDrawable();
+        Drawable drawable5 = binding.imageView5.getDrawable();
+
+        drawable.setColorFilter(getResources().getColor(R.color.colorDone), PorterDuff.Mode.SRC_IN);
+        drawable2.setColorFilter(getResources().getColor(R.color.colorDone), PorterDuff.Mode.SRC_IN);
+        drawable3.setColorFilter(getResources().getColor(R.color.colorDone), PorterDuff.Mode.SRC_IN);
+        drawable4.setColorFilter(getResources().getColor(R.color.colorDone), PorterDuff.Mode.SRC_IN);
+        drawable5.setColorFilter(getResources().getColor(R.color.colorDone), PorterDuff.Mode.SRC_IN);
+
+
         binding.textView.setVisibility(View.GONE);
         binding.speaker.setVisibility(View.GONE);
     }
 
     private void showCompletion() {
         binding.resultsContainer.setVisibility(View.VISIBLE);
-        binding.tickContainer.removeAllViews();
+        //binding.tickContainer.removeAllViews();
         binding.letterContainer.removeAllViews();
+
         binding.chestCheck.setVisibility(View.GONE);
         binding.chestClosed.setVisibility(View.GONE);
         binding.chestOpen.setVisibility(View.GONE);
+        binding.laptopClosed.setVisibility(View.GONE);
+        binding.laptopCheck.setVisibility(View.GONE);
+        binding.laptopOpen.setVisibility(View.GONE);
+
         binding.textView.setVisibility(View.GONE);
         binding.speaker.setVisibility(View.GONE);
         binding.stagesContainer.setVisibility(View.GONE);
@@ -631,7 +797,7 @@ public class ExpandListFragment extends Fragment {
         mediaPlayer = MediaPlayer.create(getContext(), R.raw.complete);
         mediaPlayer.start();
         Toast.makeText(getContext(), "All words completed!", Toast.LENGTH_SHORT).show();
-        String email = currentUser.getEmail();
+
         // Group word attempts by list ID
         Map<String, List<Map<String, Object>>> attemptsByList = new HashMap<>();
 
@@ -643,82 +809,24 @@ public class ExpandListFragment extends Fragment {
             attemptsByList.get(listId).add(attempt);
             attempt.remove("listId");
         }
+        if (currentUser != null) {
+            String email = currentUser.getEmail();
+            // For each list, fetch the list name and save attempts
+            for (String listId : attemptsByList.keySet()) {
+                List<Map<String, Object>> listAttempts = attemptsByList.get(listId);
 
-        // For each list, fetch the list name and save attempts
-        for (String listId : attemptsByList.keySet()) {
-            List<Map<String, Object>> listAttempts = attemptsByList.get(listId);
+                userViewModel.getRole().observe(getViewLifecycleOwner(), role -> {
+                    if (role.equals("public")) {
+                        userViewModel.getChildID().observe(getViewLifecycleOwner(), id -> {
+                            FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+                            if (id != null && currentUser != null) {
+                                // Reference the specific child profile
+                                DocumentReference childRef = db.collection("users")
+                                        .document(currentUser.getUid())
+                                        .collection("childProfiles")
+                                        .document(id);
 
-            userViewModel.getRole().observe(getViewLifecycleOwner(), role -> {
-                if (role.equals("public")) {
-                    userViewModel.getChildID().observe(getViewLifecycleOwner(), id -> {
-                        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-                        if (id != null && currentUser != null) {
-                            // Reference the specific child profile
-                            DocumentReference childRef = db.collection("users")
-                                    .document(currentUser.getUid())
-                                    .collection("childProfiles")
-                                    .document(id);
-
-                            db.collection("users").document(currentUser.getUid())
-                                    .collection("lists").document(listId)
-                                    .get()
-                                    .addOnCompleteListener(listTask -> {
-                                        if (listTask.isSuccessful() && listTask.getResult().exists()) {
-                                            String listName = listTask.getResult().getString("name");
-
-                                            // Now save the attempts with the correct list name
-                                            childRef.collection("statistics")
-                                                    .whereEqualTo("name", listName)
-                                                    .limit(1)
-                                                    .get()
-                                                    .addOnCompleteListener(statisticsTask -> {
-                                                        // The rest of your existing code for saving attempts
-                                                        DocumentReference statRef;
-                                                        if (statisticsTask.isSuccessful() && !statisticsTask.getResult().isEmpty()) {
-                                                            statRef = statisticsTask.getResult().getDocuments().get(0).getReference();
-                                                        } else {
-                                                            statRef = childRef.collection("statistics").document();
-                                                            Map<String, Object> statData = new HashMap<>();
-                                                            statData.put("name", listName);
-                                                            statRef.set(statData);
-                                                        }
-
-                                                        // Add the attempt
-                                                        Map<String, Object> attemptData = new HashMap<>();
-                                                        attemptData.put("wordAttempts", listAttempts);
-                                                        attemptData.put("completedAt", FieldValue.serverTimestamp());
-
-                                                        statRef.collection("attempts")
-                                                                .add(attemptData)
-                                                                .addOnSuccessListener(aVoid -> {
-                                                                    Log.d("Firestore", "Attempt saved successfully");
-                                                                })
-                                                                .addOnFailureListener(e -> {
-                                                                    Log.w("Firestore", "Error saving attempt", e);
-                                                                });
-                                                    });
-                                        }
-                                    });
-                        }
-                    });
-
-                }else if(role.equals("student")){
-                // Fetch the list name from the class's lists collection
-                db.collectionGroup("students")
-                        .whereEqualTo("email", email)
-                        .limit(1)
-                        .get()
-                        .addOnCompleteListener(task -> {
-                            if (task.isSuccessful() && !task.getResult().isEmpty()) {
-                                DocumentSnapshot studentDoc = task.getResult().getDocuments().get(0);
-                                String schoolId = studentDoc.getString("schoolId");
-                                String yearGroupId = studentDoc.getString("yearGroupId");
-                                String classId = studentDoc.getString("classId");
-
-                                // Get the list name using its ID
-                                db.collection("schools").document(schoolId)
-                                        .collection("yearGroups").document(yearGroupId)
-                                        .collection("classes").document(classId)
+                                db.collection("users").document(currentUser.getUid())
                                         .collection("lists").document(listId)
                                         .get()
                                         .addOnCompleteListener(listTask -> {
@@ -726,67 +834,157 @@ public class ExpandListFragment extends Fragment {
                                                 String listName = listTask.getResult().getString("name");
 
                                                 // Now save the attempts with the correct list name
-                                                studentDoc.getReference().collection("statistics")
+                                                childRef.collection("statistics")
                                                         .whereEqualTo("name", listName)
                                                         .limit(1)
                                                         .get()
                                                         .addOnCompleteListener(statisticsTask -> {
                                                             // The rest of your existing code for saving attempts
-                                                            if (statisticsTask.isSuccessful()) {
-                                                                QuerySnapshot statisticsSnapshot = statisticsTask.getResult();
-                                                                DocumentReference statisticsDocRef;
+                                                            DocumentReference statRef;
+                                                            if (statisticsTask.isSuccessful() && !statisticsTask.getResult().isEmpty()) {
+                                                                statRef = statisticsTask.getResult().getDocuments().get(0).getReference();
+                                                            } else {
+                                                                statRef = childRef.collection("statistics").document();
+                                                                Map<String, Object> statData = new HashMap<>();
+                                                                statData.put("name", listName);
+                                                                statData.put("listId", listId);
 
-                                                                if (statisticsSnapshot != null && !statisticsSnapshot.isEmpty()) {
-                                                                    statisticsDocRef = statisticsSnapshot.getDocuments().get(0).getReference();
-                                                                } else {
-                                                                    // Create a new statistics document
-                                                                    statisticsDocRef = studentDoc.getReference().collection("statistics").document();
-                                                                    Map<String, Object> listDetails = new HashMap<>();
-                                                                    listDetails.put("name", listName);
-                                                                    statisticsDocRef.set(listDetails);
-                                                                }
-
-                                                                // Add attempt to subcollection
-                                                                CollectionReference attemptsRef = statisticsDocRef.collection("attempts");
-
-                                                                Map<String, Object> data = new HashMap<>();
-                                                                data.put("wordAttempts", listAttempts);
-                                                                data.put("completedAt", FieldValue.serverTimestamp());
-
-                                                                attemptsRef.document()
-                                                                        .set(data)
-                                                                        .addOnSuccessListener(aVoid -> {
-                                                                            Log.d("Firestore", "Subcollection document created successfully");
-                                                                        })
-                                                                        .addOnFailureListener(e -> {
-                                                                            Log.w("Firestore", "Error creating subcollection document", e);
-                                                                        });
+                                                                statRef.set(statData);
                                                             }
+
+                                                            // Add the attempt
+                                                            Map<String, Object> attemptData = new HashMap<>();
+                                                            attemptData.put("wordAttempts", listAttempts);
+                                                            attemptData.put("completedAt", FieldValue.serverTimestamp());
+
+                                                            statRef.collection("attempts")
+                                                                    .add(attemptData)
+                                                                    .addOnSuccessListener(aVoid -> {
+                                                                        Log.d("Firestore", "Attempt saved successfully");
+                                                                    })
+                                                                    .addOnFailureListener(e -> {
+                                                                        Log.w("Firestore", "Error saving attempt", e);
+                                                                    });
                                                         });
                                             }
                                         });
                             }
                         });
+
+                    } else if (role.equals("student")) {
+                        // Fetch the list name from the class's lists collection
+                        db.collectionGroup("students")
+                                .whereEqualTo("email", email)
+                                .limit(1)
+                                .get()
+                                .addOnCompleteListener(task -> {
+                                    if (task.isSuccessful() && !task.getResult().isEmpty()) {
+                                        DocumentSnapshot studentDoc = task.getResult().getDocuments().get(0);
+                                        String schoolId = studentDoc.getString("schoolId");
+                                        String yearGroupId = studentDoc.getString("yearGroupId");
+                                        String classRoomId = studentDoc.getString("classRoomId");
+
+                                        // Get the list name using its ID
+                                        db.collection("schools").document(schoolId)
+                                                .collection("yearGroups").document(yearGroupId)
+                                                .collection("classes").document(classRoomId)
+                                                .collection("lists").document(listId)
+                                                .get()
+                                                .addOnCompleteListener(listTask -> {
+                                                    if (listTask.isSuccessful() && listTask.getResult().exists()) {
+                                                        String listName = listTask.getResult().getString("name");
+
+                                                        // Now save the attempts with the correct list name
+                                                        studentDoc.getReference().collection("statistics")
+                                                                .whereEqualTo("name", listName)
+                                                                .limit(1)
+                                                                .get()
+                                                                .addOnCompleteListener(statisticsTask -> {
+                                                                    if (statisticsTask.isSuccessful()) {
+                                                                        QuerySnapshot statisticsSnapshot = statisticsTask.getResult();
+                                                                        DocumentReference statisticsDocRef;
+
+                                                                        if (statisticsSnapshot != null && !statisticsSnapshot.isEmpty()) {
+                                                                            statisticsDocRef = statisticsSnapshot.getDocuments().get(0).getReference();
+                                                                        } else {
+                                                                            // Create a new statistics document
+                                                                            statisticsDocRef = studentDoc.getReference().collection("statistics").document();
+                                                                            Map<String, Object> listDetails = new HashMap<>();
+                                                                            listDetails.put("name", listName);
+                                                                            listDetails.put("listId", listId);
+                                                                            statisticsDocRef.set(listDetails);
+                                                                        }
+
+                                                                        // Add attempt to subcollection
+                                                                        CollectionReference attemptsRef = statisticsDocRef.collection("attempts");
+
+                                                                        Map<String, Object> data = new HashMap<>();
+                                                                        data.put("wordAttempts", listAttempts);
+                                                                        data.put("completedAt", FieldValue.serverTimestamp());
+
+                                                                        attemptsRef.document()
+                                                                                .set(data)
+                                                                                .addOnSuccessListener(aVoid -> {
+                                                                                    Log.d("Firestore", "Subcollection document created successfully");
+                                                                                })
+                                                                                .addOnFailureListener(e -> {
+                                                                                    Log.w("Firestore", "Error creating subcollection document", e);
+                                                                                });
+                                                                    }
+                                                                });
+                                                    }
+                                                });
+                                    }
+                                });
+                    }
+                });
+
             }
-        });
+            binding.button.setOnClickListener(v -> {
+                Navigation.findNavController(requireView()).popBackStack();
 
-    }
+            });
+        } else {
+            binding.button.setOnClickListener(v -> {
+                Navigation.findNavController(requireView()).popBackStack();
+            });
+        }
 
-        // Rest of your completion UI code
         LinearLayout wordColumn = binding.wordContainer;
         LinearLayout attemptsColumn = binding.attemptsContainer;
         allWords.clear();
         allAttempts.clear();
-        for(int i = 0; i<wordAttempts.size(); i++){
+
+        for (int i = 0; i < wordAttempts.size(); i++) {
             TextView wordTextView = new TextView(getContext());
             TextView attemptTextView = new TextView(getContext());
 
-            String word = (String) wordAttempts.get(i).get("word");
-            String attempt = (wordAttempts.get(i).get("attempts")).toString();
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            FontManager fontManager = new FontManager(getContext());
+            String fontType = fontManager.getFontType();
 
+            applyFont(wordTextView, fontType);
+            applyFont(attemptTextView, fontType);
+
+
+
+
+            wordTextView.setLayoutParams(params);
+            attemptTextView.setLayoutParams(params);
+
+            String word = (String) wordAttempts.get(i).get("word");
+            String attempt = (String) wordAttempts.get(i).get("attempts");
+
+            if(attempt != null && attempt.equals("6")){
+                attempt = "Erġa' pprova";
+            }
 
             wordTextView.setText(word);
+            wordTextView.setTextSize(20);
             attemptTextView.setText(attempt);
+            attemptTextView.setTextSize(20);
 
             allAttempts.add(attemptTextView);
             attemptsColumn.addView(attemptTextView);
@@ -794,51 +992,61 @@ public class ExpandListFragment extends Fragment {
             wordColumn.addView(wordTextView);
         }
 
-        binding.button.setOnClickListener(v->{
-            Navigation.findNavController(requireView()).navigate(R.id.action_expandListFragment_to_listsFragment);
 
-        });
     }
+    // Helper method to apply fonts
+    private void applyFont(TextView textView, String fontType) {
+        Typeface typeface;
+
+        if (fontType.equals(FontManager.FONT_OPEN_DYSLEXIC)) {
+            typeface = ResourcesCompat.getFont(getContext(), R.font.open_dyslexic);
+        } else if (fontType.equals(FontManager.FONT_ANDIKA)) {
+            typeface = ResourcesCompat.getFont(getContext(), R.font.andika);
+        } else {
+            // Default font
+            typeface = ResourcesCompat.getFont(getContext(), R.font.comic_sans);
+        }
+
+        textView.setTypeface(typeface);
+    }
+
     private void synthesizeText(String word) {
-        AzureTTSHelper ttsHelper = new AzureTTSHelper(SUBSCRIPTION_KEY, REGION);
+        try {
+            SpeechConfig speechConfig = SpeechConfig.fromSubscription(SUBSCRIPTION_KEY, REGION);
+            speechConfig.setSpeechSynthesisVoiceName("mt-MT-GraceNeural");
 
-        ttsHelper.synthesizeSpeech(word, new Callback() {
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful() && getContext() != null) {
-                    byte[] audioData = response.body().bytes();
+            SpeechSynthesizer synthesizer = new SpeechSynthesizer(speechConfig);
 
-                    // Cache the audio file
-                    try {
-                        cachedAudioFile = File.createTempFile("azure_tts", ".wav", requireContext().getCacheDir());
-                        FileOutputStream fos = new FileOutputStream(cachedAudioFile);
-                        fos.write(audioData);
-                        fos.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+            // Wrap the word in SSML with a prosody rate
+            String ssml = "<speak version='1.0' xml:lang='mt-MT'>" +
+                    "<voice name='mt-MT-GraceNeural'>" +
+                    "<prosody rate='slow'>" + word + "</prosody>" +
+                    "</voice></speak>";
+
+            SpeechSynthesisResult result = synthesizer.SpeakSsmlAsync(ssml).get();
+
+            if (result.getReason() == ResultReason.SynthesizingAudioCompleted) {
+                Log.i("SpeechSynthesis", "Speech synthesized with adjusted rate for: " + word);
+            } else if (result.getReason() == ResultReason.Canceled) {
+                SpeechSynthesisCancellationDetails cancellation = SpeechSynthesisCancellationDetails.fromResult(result);
+                showError("Synthesis canceled: " + cancellation.getErrorDetails());
             }
 
-            @Override
-            public void onFailure(Call call, IOException e) {
-                requireActivity().runOnUiThread(() ->
-                        Toast.makeText(requireContext(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-            }
-        });
+            synthesizer.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            showError("Error: " + e.getMessage());
+        }
     }
-    private void playAudio(File audioFile) {
-        requireActivity().runOnUiThread(() -> {
-            MediaPlayer mediaPlayer = new MediaPlayer();
-            try {
-                mediaPlayer.setDataSource(audioFile.getAbsolutePath());
-                mediaPlayer.prepare();
-                mediaPlayer.start();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
+
+    private void showError(String errorMessage) {
+        if (getActivity() != null) {
+            requireActivity().runOnUiThread(() ->
+                    Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show());
+        }
     }
+
     private void updateButtonStates() {
         binding.look.setEnabled(true);
         binding.say.setEnabled(highestStageReached.ordinal() >= Stage.SAY.ordinal());

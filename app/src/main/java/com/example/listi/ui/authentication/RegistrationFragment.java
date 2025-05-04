@@ -106,6 +106,19 @@ public class RegistrationFragment extends Fragment {
               authViewModel.registerWithEmailPassword(email, password, displayName);
           }
       });
+        binding.loginNow.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Navigation.findNavController(requireView()).navigate(R.id.action_registrationFragment_to_authenticateFragment);
+
+            }
+        });
+
+        binding.loginMicrosoft.setOnClickListener(v -> {
+            authViewModel.loginWithMicrosoft(requireActivity());
+
+        });
+
         return root;
 
         }

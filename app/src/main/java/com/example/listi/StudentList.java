@@ -27,13 +27,6 @@ public class StudentList {
     public void setId(String id) {
         this.id = id;
     }
-    public List<Map<String,Object>> getWordAttempts() {
-        return wordAttempts;
-    }
-
-    public void setWordAttempts(List<Map<String,Object>> wordAttempts) {
-        this.wordAttempts = wordAttempts;
-    }
 
     public String getName() {
         return name;

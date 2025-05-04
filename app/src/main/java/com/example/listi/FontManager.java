@@ -7,6 +7,8 @@ public class FontManager {
     public static final String FONT_COMIC_SANS = "comic_sans";
     public static final String FONT_OPEN_DYSLEXIC = "open_dyslexic";
 
+    public static final String FONT_ANDIKA = "andika";
+
     private final SharedPreferences sharedPreferences;
 
     public FontManager(Context context) {

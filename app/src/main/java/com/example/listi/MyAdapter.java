@@ -17,10 +17,6 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
     private Context context;
     private List<WordList> listArrayWordList;
 
-    private List<String> selectedIDs;
-
-
-
     public MyAdapter(Context context, List<WordList> listArrayWordList) {
         this.context = context;
         this.listArrayWordList = listArrayWordList;

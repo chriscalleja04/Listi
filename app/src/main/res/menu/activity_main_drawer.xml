@@ -14,20 +14,26 @@
             android:icon="@drawable/baseline_settings_accessibility_24"
             android:title="@string/menu_accessibility" />
         <item
-            android:id="@+id/nav_staff_management"
-            android:icon="@drawable/baseline_people_alt_24"
+            android:id="@+id/nav_statistics"
+            android:icon="@drawable/monitoring_24dp_000000_fill0_wght400_grad0_opsz24"
             android:visible="false"
-            android:title="@string/menu_staff_management" />
+            android:title="@string/menu_statistics" />
         <item
-            android:id="@+id/nav_student_management"
+            android:id="@+id/nav_school_management"
             android:icon="@drawable/baseline_school_24"
             android:visible="false"
-            android:title="@string/menu_student_management"/>
+            android:title="@string/menu_school_management"/>
 
         <item
             android:id="@+id/nav_lists"
             android:icon="@drawable/baseline_list_24"
+            android:visible="false"
             android:title="@string/menu_lists"/>
+
+        <item
+            android:id="@+id/nav_help"
+            android:icon="@drawable/keyboard_24dp_000000_fill0_wght400_grad0_opsz24"
+            android:title="Keyboard tal-Malti"/>
 
 
 

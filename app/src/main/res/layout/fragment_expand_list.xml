@@ -6,76 +6,106 @@
     android:layout_height="match_parent"
     tools:context=".ui.lists.ExpandListFragment">
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/speaker"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:clickable="true"
-        android:src="@drawable/android_volume_up"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@id/chestOpen"
-        app:layout_constraintEnd_toEndOf="@id/chestOpen"
-        app:layout_constraintHorizontal_bias="0.499"
-        app:layout_constraintStart_toStartOf="@id/chestOpen"
-        app:layout_constraintTop_toTopOf="@id/chestOpen"
-        app:layout_constraintVertical_bias="0.746"
-        tools:visibility="visible" />
-
-       <ImageView
-        android:id="@+id/chestClosed"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/screenArea"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:scaleType="fitCenter"
-        android:src="@drawable/chest_closed"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/stagesContainer"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.256"
-        tools:visibility="gone" />
+        app:layout_constraintTop_toBottomOf="@id/progressContainer">
 
-    <ImageView
-        android:id="@+id/chestOpen"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:scaleType="fitCenter"
-        android:src="@drawable/chest_open"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.256"
-        tools:visibility="visible" />
 
-    <ImageView
-        android:id="@+id/chestCheck"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:scaleType="fitCenter"
-        android:src="@drawable/chest_check"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.256"
-        tools:visibility="gone" />
+        <ImageView
+            android:id="@+id/chestClosed"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/chest_closed"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/chestOpen"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/chest_open"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+
+            tools:visibility="gone" />
+
+
+        <ImageView
+            android:id="@+id/chestCheck"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/chest_check"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="gone" />
+
+
+        <ImageView
+            android:id="@+id/laptopClosed"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/laptop_closed"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/laptopOpen"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/laptop_open"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/laptopCheck"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/laptop_check"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:visibility="gone" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="vertical"
-        android:padding="16dp"
-        app:layout_constraintBottom_toBottomOf="@id/chestOpen"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/chestOpen"
-        app:layout_constraintVertical_bias="0.257"
-        tools:visibility="visible">
+        app:layout_constraintBottom_toBottomOf="@id/screenArea"
+        app:layout_constraintEnd_toEndOf="@id/screenArea"
+        app:layout_constraintStart_toStartOf="@id/screenArea"
+        app:layout_constraintTop_toTopOf="@id/screenArea"
+        app:layout_constraintVertical_bias="0.3"
+        tools:visibility="gone">
 
         <TextView
             android:id="@+id/textView"
@@ -86,21 +116,66 @@
             android:text="TextView"
             android:textColor="#000"
             android:textSize="24sp"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@id/chestOpen"
-            app:layout_constraintEnd_toEndOf="@id/chestOpen"
-            app:layout_constraintStart_toStartOf="@id/chestOpen"
-            app:layout_constraintTop_toTopOf="@id/chestOpen"
-            app:layout_constraintVertical_bias="0.25" />
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.32" />
 
-
-        <LinearLayout
-            android:id="@+id/letter_container"
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/speaker"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="vertical" />
+            android:backgroundTint="?android:attr/colorPrimary"
+            android:clickable="true"
+            android:elevation="0dp"
+            android:src="@drawable/android_volume_up"
+            android:visibility="gone"
+            app:elevation="0dp"
+            app:fabSize="mini"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/textView"
+            app:tint="?attr/colorOnPrimary"
+            tools:visibility="visible" />
     </LinearLayout>
+    <!--<LinearLayout
+        android:id="@+id/tick_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="5dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/stagesContainer"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/progressContainer"
+        app:layout_constraintVertical_bias="0.2"/>-->
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintVertical_bias="0.15"
+        app:layout_constraintBottom_toBottomOf="@id/screenArea"
+        app:layout_constraintEnd_toEndOf="@id/screenArea"
+        app:layout_constraintStart_toStartOf="@id/screenArea"
+        app:layout_constraintTop_toTopOf="@id/screenArea"
+        android:orientation="vertical"
+        android:gravity="center">
+
+    <LinearLayout
+        android:id="@+id/letter_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="5dp" />
+    </LinearLayout>
+
+
 
     <Button
         android:id="@+id/button"
@@ -113,11 +188,13 @@
         app:layout_constraintHorizontal_bias="0.499"
         app:layout_constraintStart_toStartOf="parent" />
 
+
     <LinearLayout
+        android:id="@+id/stagesContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:padding="16dp"
         app:layout_constraintBottom_toTopOf="@+id/button"
         app:layout_constraintEnd_toEndOf="parent"
@@ -125,71 +202,270 @@
         app:layout_constraintStart_toStartOf="parent"
         tools:visibility="visible">
 
-        <Button
-            android:id="@+id/look"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:id="@+id/stagesContainerTop"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="15dp"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:text="Ħares"
-            tools:layout_editor_absoluteX="56dp"
-            android:textColor="@color/colorDone"
-            tools:layout_editor_absoluteY="702dp"
-            android:background="@android:color/transparent"/>
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toTopOf="@+id/button"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:visibility="visible">
 
-        <Button
-            android:id="@+id/say"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="15dp"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:textColor="@color/colorDone"
-            android:text="Għid"
-            tools:layout_editor_absoluteX="164dp"
-            tools:layout_editor_absoluteY="700dp"
-            android:background="@android:color/transparent"/>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                tools:visibility="visible">
 
-        <Button
-            android:id="@+id/cover"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="15dp"
-            android:textSize="15sp"
-            android:textColor="@color/colorDone"
-            android:text="Għatti"
-            android:textStyle="bold"
-            tools:layout_editor_absoluteX="273dp"
-            tools:layout_editor_absoluteY="709dp"
-            android:background="@android:color/transparent"/>
+                <ImageView
+                    android:id="@+id/imageView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/visibility_24dp_000000_fill0_wght400_grad0_opsz24"
+                    app:tint="@color/colorDone" />
 
-        <Button
-            android:id="@+id/write"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="15dp"
-            android:textSize="15sp"
-            android:textColor="@color/colorDone"
-            android:text="Ikteb"
-            android:textStyle="bold"
-            tools:layout_editor_absoluteX="399dp"
-            tools:layout_editor_absoluteY="711dp"
-            android:background="@android:color/transparent"/>
+                <Button
+                    android:id="@+id/look"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:minWidth="0dp"
+                    android:paddingStart="4dp"
+                    android:paddingEnd="4dp"
+                    android:text="Ħares"
+                    android:textAllCaps="false"
+                    android:textColor="@color/colorDone"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
-        <Button
-            android:id="@+id/check"
-            android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                tools:visibility="visible">
+
+                <ImageView
+                    android:id="@+id/imageView2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/volume_up_24dp_000000_fill0_wght400_grad0_opsz24"
+                    app:tint="@color/colorDone" />
+
+                <Button
+                    android:id="@+id/say"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:minWidth="0dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:text="Għid"
+                    android:textAllCaps="false"
+                    android:textColor="@color/colorDone"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                tools:visibility="visible">
+
+                <ImageView
+                    android:id="@+id/imageView3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/visibility_off_24dp_000000_fill0_wght400_grad0_opsz24"
+                    app:tint="@color/colorDone" />
+
+                <Button
+                    android:id="@+id/cover"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:minWidth="0dp"
+                    android:paddingStart="4dp"
+                    android:paddingEnd="4dp"
+                    android:text="Għatti"
+                    android:textAllCaps="false"
+                    android:textColor="@color/colorDone"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+                />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/stagesContainerBottom"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="15dp"
-            android:textSize="15sp"
-            android:textColor="@color/colorDone"
-            android:textStyle="bold"
-            android:text="Iċċekja"
-            tools:layout_editor_absoluteX="535dp"
-            tools:layout_editor_absoluteY="711dp"
-            android:background="@android:color/transparent"/>
+            android:gravity="center"
+            android:orientation="horizontal"
+
+            app:layout_constraintBottom_toTopOf="@+id/button"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                tools:visibility="visible">
+
+                <ImageView
+                    android:id="@+id/imageView4"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/stylus_note_24dp_000000_fill0_wght400_grad0_opsz24"
+                    app:tint="@color/colorDone" />
+
+                <Button
+                    android:id="@+id/write"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:text="Ikteb"
+                    android:textColor="@color/colorDone"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    tools:layout_editor_absoluteX="399dp"
+                    tools:layout_editor_absoluteY="711dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                tools:visibility="visible">
+
+                <ImageView
+                    android:id="@+id/imageView5"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/fact_check_24dp_000000_fill0_wght400_grad0_opsz24"
+                    app:tint="@color/colorDone" />
+
+                <Button
+                    android:id="@+id/check"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:text="Iċċekkja"
+                    android:textColor="@color/colorDone"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    tools:layout_editor_absoluteX="535dp"
+                    tools:layout_editor_absoluteY="711dp" />
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
 
+    <LinearLayout
+        android:id="@+id/progressContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5sp"
+        android:gravity="center"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible">
 
+        <ImageView
+            android:id="@+id/glass"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:src="@drawable/glass_empty" />
+
+        <TextView
+            android:id="@+id/progressText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:textSize="18sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/resultsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.217"
+        android:visibility="gone"
+        tools:visibility="visible">
+        <TextView
+            android:id="@+id/wellDone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Prosit!"
+            android:textSize="40dp"
+            android:fontFamily="Gluten"
+            />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="parent"
+        >
+
+
+        <LinearLayout
+            android:id="@+id/wordContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:orientation="vertical"
+            android:padding="16sp"
+            android:layout_marginTop="5sp"
+            android:gravity="center"
+            tools:visibility="visible">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Kliem"
+                />
+
+
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/attemptsContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:orientation="vertical"
+            android:padding="16sp"
+            android:layout_marginTop="5sp"
+            android:gravity="center"
+            tools:visibility="visible">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tentattivi"
+                />
+
+
+        </LinearLayout>
+    </LinearLayout>
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

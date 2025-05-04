@@ -8,19 +8,29 @@
     <string name="action_settings">Settings</string>
 
     <string name="menu_home">Paġna Ewlenija</string>
-    <string name="menu_staff_management">Taqsima tal-Edukaturi</string>
-    <string name="menu_student_management">Taqsima tal-Istudenti</string>
+    <string name="menu_statistics">Statistika</string>
+    <string name="menu_school_management">Skola</string>
     <string name="menu_lists">Listi</string>
     <string name="menu_accessibility">Għażliet</string>
-    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="login">Login</string>
+    <string name="login">Kompli</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
     <string name="or">JEW</string>
     <string name="kompli_b_microsoft">Kompli b\'Microsoft</string>
     <string name="profil">Profil</string>
-    <string name="register">Irreġistra</string>
+    <string name="register">"M'għandekx kont?"</string>
     <string name="isem">Isem</string>
     <string name="oħloq_profil">Oħloq Profil</string>
+    <string name="profili">Profili</string>
+    <string name="Għajnuna">Keyboard tal-Malti</string>
+    <string name="gboard">Gboard</string>
+    <string name="importanti_ni_el_keyboard_bil_malti"><b>Importanti!</b> Niżżel keyboard tal-Malti</string>
+    <string name="step3">3. Agħżel <b>Gboard</b></string>
+    <string name="step5">5. Meta titla\' l-popup <b>Change Keyboard</b>, agħfas fuq <b>Language settings</b></string>
+    <string name="step6">6. Agħfas fuq <b>+ Add Keyboard</b></string>
+    <string name="step7">7. Fittex u agħżel <b>Maltese (Malta)</b></string>
+    <string name="step8">8. Agħfas <b>Done</b></string>
+    <string name="step9">9. Erġa\' iftaħ il-keyboard u żomm l-ispacebar</string>
+    <string name="step10">10. Agħżel <b>Maltese (Malta)</b></string>
 </resources>

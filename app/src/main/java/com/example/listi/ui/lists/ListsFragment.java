@@ -2,6 +2,7 @@ package com.example.listi.ui.lists;
 
 import static android.content.ContentValues.TAG;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Typeface;
@@ -28,11 +29,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.listi.MyAdapter;
+import com.example.listi.MyListsManagementAdapter;
 import com.example.listi.Profile;
 import com.example.listi.R;
 import com.example.listi.RecyclerViewInterface;
 import com.example.listi.UserViewModel;
 import com.example.listi.WordList;
+import com.example.listi.YearClassRepository;
 import com.example.listi.databinding.FragmentHomeBinding;
 import com.example.listi.databinding.FragmentListsBinding;
 import com.example.listi.databinding.FragmentStudentManagementBinding;
@@ -41,6 +44,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskCompletionSource;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.Firebase;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -60,20 +64,30 @@ import com.google.gson.Gson;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Random;
+import java.util.Set;
 
-public class ListsFragment extends Fragment {
+public class ListsFragment extends Fragment implements MyListsManagementAdapter.ListsActionListener{
     private UserViewModel userViewModel;
     private FirebaseFirestore db;
     private FragmentListsBinding binding;
+
+    private final double MAX_WORDS = 10;
 
     ArrayList<WordList> listArrayList;
 
     MyAdapter myAdapter;
 
+    MyListsManagementAdapter myParentAdapter;
+
+
+    private YearClassRepository yearClassRepository;
 
 
     @Override
@@ -90,18 +104,18 @@ public class ListsFragment extends Fragment {
 
         listArrayList = new ArrayList<WordList>();
         myAdapter = new MyAdapter(requireContext(), listArrayList);
+        myParentAdapter = new MyListsManagementAdapter(requireContext(), listArrayList, this);
 
         binding.recyclerView.setAdapter(myAdapter);
 
 
-
         userViewModel = new ViewModelProvider(requireActivity()).get(UserViewModel.class);
+        yearClassRepository = new YearClassRepository(userViewModel);
         binding.floatingActionButton.setOnClickListener(v -> {
-            Navigation.findNavController(v).navigate(R.id.action_listsFragment_to_newListFragment);
+            Navigation.findNavController(v).navigate(R.id.action_listsFragment_to_newListPublicFragment);
         });
 
         if (userViewModel.getUser().getValue() != null) {
-
             String userId = Objects.requireNonNull(userViewModel.getUser().getValue()).getUid();
             db.collection("users")
                     .document(userId)
@@ -113,23 +127,20 @@ public class ListsFragment extends Fragment {
                                 DocumentSnapshot document = task.getResult();
                                 if (document.exists()) {
                                     String role = document.getString("role");
-
                                     if (role != null) {
                                         //binding.floatingActionButton.setVisibility(View.GONE);
                                         if (role.equals("public")) {
                                             userViewModel.getChildID().observe(getViewLifecycleOwner(), id -> {
                                                 if (id != null) {
                                                     binding.floatingActionButton.setVisibility(View.GONE);
-                                                }else{
+                                                } else {
                                                     binding.floatingActionButton.setVisibility(View.VISIBLE);
-
                                                 }
                                             });
-                                        }
-                                        else if (role.equals("student")) {
+                                        } else if (role.equals("student")) {
                                             binding.floatingActionButton.setVisibility(View.GONE);
                                         } else {
-                                            binding.floatingActionButton.setVisibility(View.VISIBLE);
+                                            binding.floatingActionButton.setVisibility(View.GONE);
 
                                         }
 
@@ -145,11 +156,15 @@ public class ListsFragment extends Fragment {
                     });
 
 
-            userViewModel.getRole().observe(getViewLifecycleOwner(), role ->{
+            userViewModel.getRole().observe(getViewLifecycleOwner(), role -> {
                 FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-                if(role.equals("public")){
+                if (role.equals("public")) {
                     userViewModel.getChildID().observe(getViewLifecycleOwner(), id -> {
-                        if(id!=null){
+                        if (id != null){
+                            // Fetch child lists
+                            binding.floatingActionButton.setVisibility(View.GONE);
+                            binding.recyclerView.setAdapter(myAdapter); // Ensure myAdapter is set
+                            listArrayList.clear(); // Clear previous data
                             assert currentUser != null;
                             db.collection("users")
                                     .document(currentUser.getUid())
@@ -158,38 +173,57 @@ public class ListsFragment extends Fragment {
                                     .addSnapshotListener(new EventListener<QuerySnapshot>() {
                                         @Override
                                         public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+                                            // ... your existing snapshot listener for child lists
                                             if (error != null) {
-                                                // Handle Firestore errors
                                                 Log.e("Firestore error", error.getMessage());
                                                 return;
                                             }
-
-                                            // Check if the QuerySnapshot is null or empty
                                             if (value == null || value.isEmpty()) {
-                                                Log.d(TAG, "No documents found in the query.");
+                                                Log.d(TAG, "No documents found for child.");
+                                                // Consider showing a message to the user
                                                 return;
                                             }
-
-                                            // Process document changes
+                                            listArrayList.clear(); // Clear before adding new data
                                             for (DocumentChange document : value.getDocumentChanges()) {
                                                 if (document.getType() == DocumentChange.Type.ADDED) {
                                                     WordList wordList = document.getDocument().toObject(WordList.class);
                                                     wordList.setId(document.getDocument().getId());
                                                     listArrayList.add(wordList);
-
                                                 }
+                                                // Handle MODIFIED and REMOVED as well if needed
                                             }
-
-                                            // Notify the adapter of data changes
                                             myAdapter.notifyDataSetChanged();
                                         }
-
-
                                     });
-                        }
+                        } /*else {
+                            // Public user, no child selected
+                            binding.play.setVisibility(View.GONE);
+                            binding.floatingActionButton.setVisibility(View.VISIBLE);
+                            binding.recyclerView.setAdapter(myParentAdapter); // Set myParentAdapter
+                            listArrayList.clear(); // Clear previous data
+                            yearClassRepository.fetchLists(); // Fetch parent lists
+                            userViewModel.getLists().observe(getViewLifecycleOwner(), lists -> {
+                                listArrayList.clear();
+                                listArrayList.addAll(lists);
+                                myParentAdapter.notifyDataSetChanged();
+                            });
+                        }*/
+                    });
 
-                });
-                    }else if(role.equals("student")){
+                    if (userViewModel.getChildID().getValue() == null) {
+                        binding.play.setVisibility(View.GONE);
+                        binding.floatingActionButton.setVisibility(View.VISIBLE);
+                        binding.recyclerView.setAdapter(myParentAdapter); // Set myParentAdapter
+                        listArrayList.clear(); // Clear previous data
+                        yearClassRepository.fetchLists(); // Fetch parent lists
+                        userViewModel.getLists().observe(getViewLifecycleOwner(), lists -> {
+                            listArrayList.clear();
+                            listArrayList.addAll(lists);
+                            myParentAdapter.notifyDataSetChanged();
+                        });
+                    }
+
+                } else if (role.equals("student")) {
                     db.collection("users")
                             .document(userId)
                             .get()
@@ -210,7 +244,7 @@ public class ListsFragment extends Fragment {
                                                             if (studentSnapshot != null && !studentSnapshot.isEmpty()) {
                                                                 DocumentSnapshot doc = studentSnapshot.getDocuments().get(0);
                                                                 String yearGroupId = doc.getString("yearGroupId");
-                                                                String classId = doc.getString("classId");
+                                                                String classId = doc.getString("classRoomId");
                                                                 String schoolId = doc.getString("schoolId");
                                                                 db.collection("schools")
                                                                         .document(schoolId)
@@ -229,13 +263,11 @@ public class ListsFragment extends Fragment {
                                                                                     return;
                                                                                 }
 
-                                                                                // Check if the QuerySnapshot is null or empty
                                                                                 if (value == null || value.isEmpty()) {
                                                                                     Log.d(TAG, "No documents found in the query.");
                                                                                     return;
                                                                                 }
 
-                                                                                // Process document changes
                                                                                 for (DocumentChange document : value.getDocumentChanges()) {
                                                                                     if (document.getType() == DocumentChange.Type.ADDED) {
                                                                                         WordList wordList = document.getDocument().toObject(WordList.class);
@@ -275,33 +307,76 @@ public class ListsFragment extends Fragment {
         binding.play.setOnClickListener(v -> {
             List<WordList> checkedLists = myAdapter.getCheckedItems();
 
-            if(checkedLists.isEmpty()){
+            if (checkedLists.isEmpty()) {
                 Toast.makeText(requireContext(), "Agħżel mill-inqas lista waħda biex tilgħab", Toast.LENGTH_SHORT).show();
-            }else{
+            } else {
                 Map<String, List<String>> wordsByList = new HashMap<>();
-                for(int i = 0; i<checkedLists.size(); i++){
+                Map<String, List<String>> wordsByListSample = new HashMap<>();
+                Map<String, List<String>> incorrectWords = new HashMap<>();
+
+                double calc = MAX_WORDS / checkedLists.size();
+                int avg = (int) Math.floor(calc);
+
+                for (int i = 0; i < checkedLists.size(); i++) {
                     WordList wordlist = checkedLists.get(i);
                     List<String> words = wordlist.getWords();
                     String id = wordlist.getId();
-                    if(words!=null && !words.isEmpty()){
+                    if (words != null && !words.isEmpty()) {
                         wordsByList.put(id, new ArrayList<>(words));
-
                     }
                 }
-                if(wordsByList.isEmpty()) {
-                    Toast.makeText(requireContext(), "Ma nstabux kliem fil-listi magħżula", Toast.LENGTH_SHORT).show();
-                }else{
-                    Bundle bundle = new Bundle();
-                    Gson gson = new Gson();
-                    String json = gson.toJson(wordsByList);
-                    bundle.putString("wordsJson", json);
 
-                    Navigation.findNavController(requireView()).navigate(R.id.action_listsFragment_to_expandListFragment, bundle);
+
+                String currentId = null;
+                Set<String> usedIds = new HashSet<>();
+                for (Map.Entry<String, List<String>> entry : wordsByList.entrySet()) {
+                    String shortestId = getShortestId(usedIds, wordsByList);
+
+                    int[] indexes = new int[avg];
+                    List<String> sWords = wordsByList.get(shortestId);
+                    List<String> sWordsSample = new ArrayList<>();
+                    if (sWords != null) {
+                        if (sWords.size() <= avg) {
+                            wordsByListSample.put(shortestId, new ArrayList<>(sWords));
+                        } else {
+                            List<String> sWordsCopy = new ArrayList<>(sWords);
+                            Random rand = new Random();
+                            Set<Integer> usedIndexes = new HashSet<>();
+                            for (int j = 0; j < avg; j++) {
+                                int index = rand.nextInt(sWordsCopy.size());
+                                if (!usedIndexes.contains(index)) {
+                                    usedIndexes.add(index);
+                                    indexes[j] = index;
+                                }
+                            }
+                            for (int k = 0; k < indexes.length; k++) {
+                                sWordsSample.add(sWords.get(indexes[k]));
+                            }
+                            wordsByListSample.put(shortestId, new ArrayList<>(sWordsSample));
+
+
+                        }
+                        currentId = shortestId;
+                        usedIds.add(currentId);
+                    }
+
 
                 }
 
-            }
+                if (wordsByList.isEmpty()) {
+                    Toast.makeText(requireContext(), "Ma nstabux kliem fil-listi magħżula", Toast.LENGTH_SHORT).show();
+                } else {
 
+                            Log.d(TAG, wordsByListSample.toString());
+                            Bundle bundle = new Bundle();
+                            Gson gson = new Gson();
+                            String json = gson.toJson(wordsByListSample);
+
+                            bundle.putString("wordsJson", json);
+
+                            Navigation.findNavController(requireView()).navigate(R.id.action_listsFragment_to_expandListFragment, bundle);
+                        }
+                }
         });
         return root;
     }
@@ -310,6 +385,51 @@ public class ListsFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
+    }
+
+    private String getShortestId(Set<String> usedIds, Map<String, List<String>> wordsByList) {
+        String shortestId = null;
+        int minSize = Integer.MAX_VALUE;
+        for (Map.Entry<String, List<String>> entry : wordsByList.entrySet()) {
+            String id = entry.getKey();
+            if (usedIds.contains(id)) {
+                continue;
+            }
+            List<String> vals = entry.getValue();
+            int size = vals.size();
+            if (size < minSize) {
+                minSize = size;
+                shortestId = entry.getKey();
+            }
+
+        }
+
+        return shortestId;
+    }
+
+    @Override
+    public void onDeleteList(String listId) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Confirm Delete")
+                .setMessage("Are you sure you want to delete this List?")
+                .setPositiveButton("Yes", (dialog, which) -> {
+                    if (listId != null) {
+                        yearClassRepository.deleteList(listId);
+
+                        for (int i = 0; i < listArrayList.size(); i++) {
+                            if (listArrayList.get(i).getId().equals(listId)) {
+                                listArrayList.remove(i);
+                                myParentAdapter.notifyItemRemoved(i);
+                                break;
+                            }
+                        }
+
+                        Snackbar.make(binding.getRoot(), "Lista Tneħħiet", Snackbar.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("No", (dialog, which) -> {
+                })
+                .show();
     }
 
   /*  @Override
@@ -332,5 +452,5 @@ public class ListsFragment extends Fragment {
     }*/
 
 
+    }
 
-}

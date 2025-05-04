@@ -9,6 +9,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
 import java.util.ArrayList;
 
 public class MyStudentListAdapter extends RecyclerView.Adapter<MyStudentListAdapter.MyViewHolder> {
@@ -34,6 +36,8 @@ public class MyStudentListAdapter extends RecyclerView.Adapter<MyStudentListAdap
     public void onBindViewHolder(@NonNull MyStudentListAdapter.MyViewHolder holder, int position) {
         StudentList studentList = studentListArray.get(position);
         holder.name.setText(studentList.getName());
+        holder.edit.setVisibility(View.GONE);
+        holder.delete.setVisibility(View.GONE);
     }
 
     @Override
@@ -43,9 +47,13 @@ public class MyStudentListAdapter extends RecyclerView.Adapter<MyStudentListAdap
 
     public static class MyViewHolder extends RecyclerView.ViewHolder {
         TextView name;
+        FloatingActionButton edit, delete;
+
         public MyViewHolder(@NonNull View itemView, RecyclerViewInterface recyclerViewInterface) {
             super(itemView);
             name = itemView.findViewById(R.id.listHeader);
+            edit = itemView.findViewById(R.id.editItem);
+            delete = itemView.findViewById(R.id.deleteItem);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {

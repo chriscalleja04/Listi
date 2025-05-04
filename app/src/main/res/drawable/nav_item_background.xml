@@ -2,16 +2,24 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Selected state -->
     <item android:state_checked="true">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/colorPrimary" /> <!-- Use your primary color -->
-            <corners android:radius="8dp" /> <!-- Optional: Add rounded corners -->
-        </shape>
+        <inset
+            android:insetLeft="10dp"
+            android:insetRight="10dp">
+            <shape android:shape="rectangle">
+                <solid android:color="@color/colorPrimaryTransparent" />
+                <corners android:radius="50dp" />
+            </shape>
+        </inset>
     </item>
 
     <!-- Unselected state -->
     <item android:state_checked="false">
-        <shape android:shape="rectangle">
-            <solid android:color="@android:color/transparent" /> <!-- Transparent background -->
-        </shape>
+        <inset
+            android:insetLeft="8dp"
+            android:insetRight="8dp">
+            <shape android:shape="rectangle">
+                <solid android:color="@android:color/transparent" />
+            </shape>
+        </inset>
     </item>
 </selector>

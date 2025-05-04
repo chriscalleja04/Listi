@@ -42,6 +42,9 @@
     <action
         android:id="@+id/action_registrationFragment_to_homeFragment"
         app:destination="@+id/nav_home"/>
+        <action
+            android:id="@+id/action_registrationFragment_to_authenticateFragment"
+            app:destination="@+id/nav_authentication"/>
     </fragment>
 
     <fragment
@@ -77,40 +80,173 @@
         tools:layout="@layout/fragment_accessibility" />
 
     <fragment
-        android:id="@+id/nav_staff_management"
-        android:name="com.example.listi.ui.staffManagement.StaffManagementFragment"
-        android:label="@string/menu_staff_management"
-        tools:layout="@layout/fragment_staff_management" />
-    <fragment
-        android:id="@+id/nav_student_management"
-        android:name="com.example.listi.ui.studentManagement.StudentManagementFragment"
-        android:label="@string/menu_student_management"
+        android:id="@+id/nav_statistics"
+        android:name="com.example.listi.ui.statistics.ChildProfilesFragment"
+        android:label="@string/profili"
+        tools:layout="@layout/fragment_child_profiles">
+        <action
+            android:id="@+id/action_childProfilesFragment_to_studentListsFragment"
+            app:destination="@+id/studentListsFragment"/>
+    </fragment>
+
+
+
+     <fragment
+        android:id="@+id/nav_school_management"
+        android:name="com.example.listi.ui.schoolManagement.YearGroupFragment"
+        android:label="Snin"
         tools:layout="@layout/fragment_student_management">
+        <action
+            android:id="@+id/action_studentManagementFragment_to_classRoomFragment"
+            app:destination="@+id/classRoomFragment"/>
         <action
             android:id="@+id/action_studentManagementFragment_to_newStudentFragment"
             app:destination="@+id/newStudentFragment"/>
         <action
             android:id="@+id/action_studentManagementFragment_to_studentListsFragment"
             app:destination="@+id/studentListsFragment"/>
+         <action
+             android:id="@+id/action_yearGroupFragment_to_newYearGroupFragment"
+             app:destination="@+id/newYearGroupFragment"/>
     </fragment>
     <fragment
+        android:id="@+id/newYearGroupFragment"
+        android:name="com.example.listi.ui.schoolManagement.NewYearGroupFragment"
+        tools:layout="@layout/fragment_new_year_group">
+        <action
+            android:id="@+id/action_newYearGroupFragment_to_yearGroupFragment"
+            app:destination="@+id/nav_school_management"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/updateYearGroup"
+        android:name="com.example.listi.ui.schoolManagement.UpdateYearGroupFragment"
+        tools:layout="@layout/fragment_update_year_group" />
+
+    <fragment
+        android:id="@+id/updateClassRoom"
+        android:name="com.example.listi.ui.schoolManagement.UpdateClassFragment"
+        tools:layout="@layout/fragment_update_class" />
+
+    <fragment
+        android:id="@+id/updateStudent"
+        android:name="com.example.listi.ui.schoolManagement.UpdateStudentsFragment"
+        tools:layout="@layout/fragment_update_students" />
+
+    <fragment
+        android:id="@+id/updateEducator"
+        android:name="com.example.listi.ui.schoolManagement.UpdateEducatorsFragment"
+        tools:layout="@layout/fragment_update_educators" />
+
+    <fragment
+        android:id="@+id/updateList"
+        android:name="com.example.listi.ui.schoolManagement.UpdateListFragment"
+        tools:layout="@layout/fragment_update_list" />
+
+    <fragment
         android:id="@+id/newStudentFragment"
-        android:name="com.example.listi.ui.studentManagement.NewStudentFragment"
+        android:name="com.example.listi.ui.schoolManagement.NewStudentFragment"
         tools:layout="@layout/fragment_new_student">
     </fragment>
+
+    <fragment
+        android:id="@+id/classRoomFragment"
+        android:name="com.example.listi.ui.schoolManagement.ClassRoomFragment"
+        android:label="Klassijiet"
+        tools:layout="@layout/fragment_class_room">
+    <action
+        android:id="@+id/action_classRoomFragment_to_studentFragment"
+        app:destination="@+id/studentFragment"/>
+    <action
+        android:id="@+id/action_classRoomFragment_to_adminOptionsFragment"
+        app:destination="@+id/adminOptionsFragment"/>
+    <action
+        android:id="@+id/action_classRoomFragment_to_newClassFragment"
+        app:destination="@+id/newClassFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/newClassFragment"
+        android:name="com.example.listi.ui.schoolManagement.NewClassFragment"
+        tools:layout="@layout/fragment_new_class">
+        <action
+            android:id="@+id/action_newClassFragment_to_classRoomFragment"
+            app:destination="@+id/classRoomFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/adminOptionsFragment"
+        android:name="com.example.listi.ui.schoolManagement.AdminOptionsFragment"
+        android:label="Klassijiet"
+        tools:layout="@layout/fragment_admin_options">
+        <action
+            android:id="@+id/action_adminOptionsFragment_to_studentFragment"
+            app:destination="@+id/studentFragment"/>
+        <action
+            android:id="@+id/action_adminOptionsFragment_to_educatorFragment"
+            app:destination="@+id/educatorFragment"/>
+
+        <action
+            android:id="@+id/action_adminOptionsFragment_to_listsManagementFragment"
+            app:destination="@+id/ListManagementFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/studentFragment"
+        android:name="com.example.listi.ui.schoolManagement.StudentFragment"
+        android:label="Studenti"
+        tools:layout="@layout/fragment_student">
+        <action
+            android:id="@+id/action_studentFragment_to_studentListsFragment"
+            app:destination="@+id/studentListsFragment"/>
+        <action
+            android:id="@+id/action_studentFragment_to_newStudentFragment"
+            app:destination="@+id/newStudentFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/educatorFragment"
+        android:name="com.example.listi.ui.schoolManagement.EducatorFragment"
+        android:label="Edukaturi"
+        tools:layout="@layout/fragment_educator">
+        <action
+            android:id="@+id/action_educatorFragment_to_newEducatorFragment"
+            app:destination="@+id/newEducatorFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/newEducatorFragment"
+        android:name="com.example.listi.ui.schoolManagement.NewEducatorFragment"
+        tools:layout="@layout/fragment_new_educator">
+        <action
+            android:id="@+id/action_newEducatorFragment_to_educatorFragment"
+            app:destination="@+id/educatorFragment"/>
+    </fragment>
+
     <fragment
         android:id="@+id/studentListsFragment"
         android:label="Statistika"
-        android:name="com.example.listi.ui.studentManagement.StudentListsFragment"
+        android:name="com.example.listi.ui.schoolManagement.StudentListsFragment"
         tools:layout="@layout/fragment_student_lists">
         <action
-            android:id="@+id/action_studentListsFragment_to_expandStudentFragment"
+            android:id="@+id/action_studentListsFragment_to_statisticsFragment"
+            app:destination="@+id/statisticsFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/statisticsFragment"
+        android:label="Tentattivi"
+        android:name="com.example.listi.ui.schoolManagement.StatisticsFragment"
+        tools:layout="@layout/fragment_statistics">
+        <action
+            android:id="@+id/action_statisticsFragment_to_expandStudentFragment"
             app:destination="@+id/expandStudentFragment"/>
     </fragment>
+
     <fragment
         android:id="@+id/expandStudentFragment"
         android:label="Statistika"
-        android:name="com.example.listi.ui.studentManagement.ExpandStudentFragment"
+        android:name="com.example.listi.ui.schoolManagement.ExpandStudentFragment"
         tools:layout="@layout/fragment_expand_student">
     </fragment>
     <fragment
@@ -122,6 +258,9 @@
             android:id="@+id/action_listsFragment_to_newListFragment"
             app:destination="@+id/newListFragment"/>
         <action
+            android:id="@+id/action_listsFragment_to_newListPublicFragment"
+            app:destination="@+id/newListPublicFragment"/>
+        <action
             android:id="@+id/action_listsFragment_to_expandListFragment"
             app:destination="@+id/expandListFragment"/>
         <action
@@ -129,10 +268,28 @@
             app:destination="@+id/nav_home"/>
     </fragment>
 
+
+    <fragment
+        android:id="@+id/ListManagementFragment"
+        android:label="Listi"
+        android:name="com.example.listi.ui.schoolManagement.ListsManagementFragment"
+        tools:layout="@layout/fragment_lists_management">
+    <action
+        android:id="@+id/action_listsManagementFragment_to_newListFragment"
+        app:destination="@+id/newListFragment"/>
+    </fragment>
+
+
     <fragment
         android:id="@+id/newListFragment"
         android:label="Lista Ġdida"
-        android:name="com.example.listi.ui.lists.NewListFragment"
+        android:name="com.example.listi.ui.schoolManagement.NewListFragment"
+        />
+
+    <fragment
+        android:id="@+id/newListPublicFragment"
+        android:label="Lista Ġdida"
+        android:name="com.example.listi.ui.lists.NewListPublicFragment"
         />
 
     <fragment
@@ -142,5 +299,21 @@
     <action
         android:id="@+id/action_expandListFragment_to_listsFragment"
         app:destination="@+id/nav_lists"/>
+        <action
+            android:id="@+id/action_expandListFragment_to_homeFragment"
+            app:destination="@+id/nav_home"/>
     </fragment>
+
+
+
+    <fragment
+        android:id="@+id/nav_help"
+        android:name="com.example.listi.ui.help.HelpFragment"
+        android:label="@string/Għajnuna"
+        tools:layout="@layout/fragment_help">
+    <action
+        android:id="@+id/action_helpFragment_to_homeFragment"
+        app:destination="@+id/nav_home"/>
+    </fragment>
+
 </navigation>

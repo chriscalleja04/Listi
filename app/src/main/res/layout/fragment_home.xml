@@ -5,62 +5,114 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ui.home.HomeFragment">
-
-    <Button
-        android:id="@+id/account"
+    <TextView
+        android:id="@+id/connectionStatusTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Idħol"
+        android:text="Il-WiFi Mitfi"
+        android:drawableLeft="@drawable/wifi_off_24dp_000000_fill0_wght400_grad0_opsz24"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:drawablePadding="10dp"
+        android:padding="16dp"
+        android:textColor="@android:color/black"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:visibility="visible" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Spellini"
+        android:textColor="?attr/colorPrimary"
+        android:textSize="50sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout4"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+    </TextView>
+
+    <LinearLayout
+        android:id="@+id/linearLayout4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <androidx.cardview.widget.CardView
-        android:id="@+id/sample_container"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:layout_margin="16dp"
-        app:cardCornerRadius="8dp"
-        app:cardElevation="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/account">
-
+        app:layout_constraintTop_toTopOf="parent">
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginVertical="6dp"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp">
-        <TextView
-            android:id="@+id/sampleHeader"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:textColor="?attr/colorPrimary"
-            android:textSize="26sp"
-            android:textStyle="bold" />
+            android:padding="10dp"
+            android:orientation="vertical">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/account"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Idħol"
+                app:icon="@drawable/login_24dp_000000_fill0_wght400_grad0_opsz24"
+                app:iconGravity="start" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="?attr/colorPrimary"
+                android:text="Idħol fil-kont tiegħek"
+                />
         </LinearLayout>
-        <LinearLayout
-            android:layout_width="match_parent"
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="10dp"
+        android:orientation="vertical">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/sample"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginVertical="6dp"
+            android:text="Kampjun ta' kliem"
+            app:icon="@drawable/assignment_24dp_000000_fill0_wght400_grad0_opsz24" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/colorPrimary"
             android:gravity="center"
-            android:layout_gravity="center"
-            android:orientation="vertical"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp">
+            android:text="Idra l-logħba billi tilgħab b'dan il-kampjun ta' kliem"
+            />
+    </LinearLayout>
 
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="10dp"
+        android:gravity="center">
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/keyboard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Keyboard tal-Malti"
+            app:icon="@drawable/keyboard_24dp_000000_fill0_wght400_grad0_opsz24"
 
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/colorPrimary"
+            android:gravity="center"
+            android:text="@string/importanti_ni_el_keyboard_bil_malti"
+            />
 
-        </LinearLayout>
+    </LinearLayout>
 
-
-
-    </androidx.cardview.widget.CardView>
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

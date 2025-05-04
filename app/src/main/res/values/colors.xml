@@ -1,11 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="color1">#ee1250</color>
-    <color name="color4">#00B304</color>
+    <color name="color1">#1a9850</color>
+    <color name="color2">#bbdb44</color>
+    <color name="color3">#f7e379</color>
+    <color name="color4">#f2a134</color>
+    <color name="color5">#e51f1f</color>
+    <color name="color6">#8B0000</color>
+    <color name="black">#000000</color>
+    <color name="grey">#d3d3d3</color>
+
+    <color name="color7">#d73027</color>
+
 
 
     <!-- Primary Colors -->
     <color name="colorPrimary">#4A6E7A</color>
+    <color name="colorPrimaryTransparent">#224A6E7A</color>
     <color name="colorPrimaryContainer">#B0D0D9</color>
     <color name="colorOnPrimary">#FEEFD0</color>
 
@@ -39,8 +49,18 @@
     <color name="statusBarColor">#4A6E7A</color>
 
     <color name="colorPrimary_2">#566891</color>
+    <color name="colorPrimaryTransparent_2">#22566891</color>
+
     <color name="colorOnPrimary_2">#E4EBF5</color>
     <color name="colorBackground_2">#E4EBF5</color>
     <color name="colorSurface_2">#E4EBF5</color>
     <color name="transparent">#00000000</color>
+
+
+    <color name="colorPrimary_3">#004F9F</color>
+    <color name="colorPrimaryTransparent_3">#22004F9F</color>
+    <color name="colorOnPrimary_3">#E5F9E9</color>
+    <color name="colorBackground_3">#E5F9E9</color>
+    <color name="colorSurface_3">#E5F9E9</color>
+    <color name="transparent_2">#00000000</color>
 </resources>

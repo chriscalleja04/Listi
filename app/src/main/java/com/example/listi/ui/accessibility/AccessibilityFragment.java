@@ -1,61 +1,31 @@
 package com.example.listi.ui.accessibility;
 
-import static android.content.ContentValues.TAG;
-
-import static androidx.core.app.ActivityCompat.recreate;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Typeface;
-import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.example.listi.AzureTTSHelper;
 import com.example.listi.ColourManager;
 import com.example.listi.FontManager;
 import com.example.listi.MainActivity;
 import com.example.listi.R;
 import com.example.listi.UserViewModel;
+import com.example.listi.VisualsManager;
 import com.example.listi.databinding.FragmentAccessibilityBinding;
-import com.example.listi.databinding.FragmentHomeBinding;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Response;
 
 public class AccessibilityFragment extends Fragment {
 
@@ -67,7 +37,7 @@ public class AccessibilityFragment extends Fragment {
     private FontManager fontManager;
 
     private ColourManager colourManager;
-    private Typeface comicSansTypeface, openDyslexicTypeface;
+    private Typeface comicSansTypeface, openDyslexicTypeface, andikaTypeface;
 
 
     @Nullable
@@ -85,6 +55,9 @@ public class AccessibilityFragment extends Fragment {
         openDyslexicTypeface = ResourcesCompat.getFont(requireContext(), R.font.open_dyslexic);
         binding.openDyslexic.setTypeface(openDyslexicTypeface);
 
+        andikaTypeface = ResourcesCompat.getFont(requireContext(), R.font.andika);
+        binding.andika.setTypeface(andikaTypeface);
+
         binding.comicSans.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -99,6 +72,15 @@ public class AccessibilityFragment extends Fragment {
             public void onClick(View view) {
                 fontManager.setFontType(FontManager.FONT_OPEN_DYSLEXIC);
                 Toast.makeText(requireContext(), "Font changed to Open Dyslexic", Toast.LENGTH_SHORT).show();
+                restartApp();
+            }
+        });
+
+        binding.andika.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                fontManager.setFontType(FontManager.FONT_ANDIKA);
+                Toast.makeText(requireContext(), "Font changed to Andika", Toast.LENGTH_SHORT).show();
                 restartApp();
             }
         });
@@ -121,6 +103,32 @@ public class AccessibilityFragment extends Fragment {
                 Toast.makeText(requireContext(), "Colour changed to 2", Toast.LENGTH_SHORT).show();
                 restartApp();
 
+            }
+        });
+        binding.imageButton3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                colourManager.setColourType(ColourManager.COLOUR_3);
+                Toast.makeText(requireContext(), "Colour changed to 3", Toast.LENGTH_SHORT).show();
+                restartApp();
+            }
+        });
+
+        VisualsManager visualsManager = new VisualsManager(requireContext());
+        binding.imageButton4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                visualsManager.setVisualsType(VisualsManager.VISUAL_1);
+                Toast.makeText(requireContext(), "Config set to Chest", Toast.LENGTH_SHORT).show();
+                restartApp();
+            }
+        });
+        binding.imageButton5.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                visualsManager.setVisualsType(VisualsManager.VISUAL_2);
+                Toast.makeText(requireContext(), "Config set to Laptop", Toast.LENGTH_SHORT).show();
+                restartApp();
             }
         });
 

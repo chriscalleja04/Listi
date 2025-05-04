@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.lists.NewListFragment">
+    tools:context=".ui.schoolManagement.NewListFragment">
 
     <TextView
         android:id="@+id/schoolName"
@@ -46,32 +46,6 @@
                 android:orientation="vertical"
                 android:layout_marginBottom="16dp">
 
-                <TextView
-                    android:id="@+id/sena"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Sena"
-                    android:layout_marginBottom="4dp" />
-
-                <Spinner
-                    android:id="@+id/yearGroup"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginBottom="16dp" />
-
-                <TextView
-                    android:id="@+id/klassi"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Klassi"
-                    android:layout_marginBottom="4dp" />
-
-                <Spinner
-                    android:id="@+id/classSpinner"
-                    android:layout_width="match_parent"
-                    android:layout_height="48dp"
-                    android:layout_marginBottom="16dp" />
-
                 <EditText
                     android:id="@+id/listName"
                     android:layout_width="match_parent"
@@ -93,15 +67,33 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
-
-                <EditText
-                    android:id="@+id/wordInput"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Ikteb kelma"
-                    android:inputType="text"
-                    />
+                    android:orientation="horizontal"
+                    >
 
+
+                    <EditText
+                        android:id="@+id/wordInput"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:hint="Ikteb kelma"
+                        android:inputType="text" />
+
+                    <com.google.android.material.floatingactionbutton.FloatingActionButton
+                        android:id="@+id/addWord"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_margin="10dp"
+                        app:backgroundTint="?attr/colorPrimary"
+                        app:tint="?attr/colorOnPrimary"
+                        android:src="@android:drawable/ic_input_add" />
+                </LinearLayout>
             </LinearLayout>
 
         </LinearLayout>
@@ -119,15 +111,6 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Floating Button to Add Words -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/addWord"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
-        android:clickable="true"
-        android:src="@android:drawable/ic_input_add"
-        app:layout_constraintBottom_toTopOf="@+id/addList"
-        app:layout_constraintEnd_toEndOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

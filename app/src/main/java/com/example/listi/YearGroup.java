@@ -1,13 +1,15 @@
 package com.example.listi;
 
-public class Student {
-    private String id,name, email;
+import java.util.ArrayList;
 
-    public Student() {}
-    public Student(String id, String name, String email) {
+public class YearGroup {
+    private String id,name;
+
+    public YearGroup() {}
+    public YearGroup(String id, String name) {
         this.id = id;
         this.name = name;
-        this.email = email;
+
     }
 
     public String getID(){
@@ -17,6 +19,7 @@ public class Student {
         return name;
     }
 
+
     public void setID(String id){
         this.id = id;
     }
@@ -24,11 +27,5 @@ public class Student {
         this.name = name;
     }
 
-    public String getEmail() {
-        return email;
-    }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
 }

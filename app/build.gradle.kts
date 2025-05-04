@@ -46,6 +46,7 @@ dependencies {
     implementation(libs.navigation.ui)
     implementation(libs.legacy.support.v4)
     implementation(libs.activity)
+    implementation(libs.cardview)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
@@ -65,6 +66,8 @@ dependencies {
     implementation(libs.client.sdk);
     implementation(libs.concurrent.futures);
     implementation(libs.mpandroidchart)
+    implementation(libs.window)
+    implementation(libs.window.core)
 
 
 }

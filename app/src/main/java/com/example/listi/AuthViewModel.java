@@ -7,9 +7,6 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.Firebase;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -76,30 +73,30 @@ public class AuthViewModel extends ViewModel {
                 });
     }
 
-    public Task<AuthResult> loginWithEmailPassword(String email, String password){
+    public void loginWithEmailPassword(String email, String password){
         isLoading.setValue(true);
-        return authRepository.loginWithEmailPassword(email, password)
+        authRepository.loginWithEmailPassword(email, password)
                 .addOnCompleteListener(task -> {
-                        isLoading.setValue(false);
-                        if(task.isSuccessful()) {
-                            FirebaseUser user = task.getResult().getUser();
-                            currentUser.setValue(user);
-                            fetchUserRole(user.getUid());
-                            authMessage.setValue("Sign in successful");
-                        } else {
-                            authMessage.setValue("Sign in failed: "+task.getException().getMessage());
-                    };
+                    isLoading.setValue(false);
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = task.getResult().getUser();
+                        currentUser.setValue(user);
+                        fetchUserRole(user.getUid());
+                        authMessage.setValue("Sign in successful");
+                    } else {
+                        authMessage.setValue("Sign in failed: " + task.getException().getMessage());
+                    }
                 });
     }
 
-    public Task<AuthResult> registerWithEmailPassword(String email, String password, String displayName){
+    public void registerWithEmailPassword(String email, String password, String displayName){
         isLoading.setValue(true);
-        return authRepository.registerWithEmailPassword(email,password)
+        authRepository.registerWithEmailPassword(email, password)
                 .addOnCompleteListener(task -> {
-                    if(task.isSuccessful()){
+                    if (task.isSuccessful()) {
                         FirebaseUser user = task.getResult().getUser();
                         authRepository.updateUserProfile(user, displayName)
-                                .addOnCompleteListener(profileTask ->{
+                                .addOnCompleteListener(profileTask -> {
                                     authRepository.addUserToFirestore(user)
                                             .addOnSuccessListener(aVoid -> {
                                                 currentUser.setValue(user);
@@ -113,9 +110,9 @@ public class AuthViewModel extends ViewModel {
                                                 authMessage.setValue("Registration successful but failed to save user data");
                                             });
                                 });
-                    }else {
+                    } else {
                         isLoading.setValue(false);
-                        authMessage.setValue("Registration Failed "+ task.getException().getMessage());
+                        authMessage.setValue("Registration Failed " + task.getException().getMessage());
                     }
                 });
     }
@@ -128,6 +125,7 @@ public class AuthViewModel extends ViewModel {
         currentUser.setValue(null);
         userRole.setValue(null);
         schoolId.setValue(null);
+        authMessage.setValue("");
     }
 
     public void setUser(FirebaseUser user){
@@ -147,7 +145,7 @@ public class AuthViewModel extends ViewModel {
                 .addOnSuccessListener(documentSnapshot -> {
                     if(documentSnapshot.exists()){
                         String role = documentSnapshot.getString("role");
-                        String school = documentSnapshot.getString("school");
+                        String school = documentSnapshot.getString("schoolId");
                         userRole.setValue(role);
                         schoolId.setValue(school);
                     }else{

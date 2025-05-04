@@ -24,7 +24,6 @@ import java.util.Map;
 public class AuthRepository {
     private final FirebaseAuth firebaseAuth;
     private final OAuthProvider.Builder microsoftProvider;
-
     private final FirebaseFirestore db;
 
     public AuthRepository() {

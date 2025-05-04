@@ -5,56 +5,45 @@
 
     import android.content.Context;
     import android.content.SharedPreferences;
+    import android.content.pm.ActivityInfo;
+    import android.net.ConnectivityManager;
+    import android.net.Network;
+    import android.net.NetworkCapabilities;
+    import android.os.Build;
     import android.os.Bundle;
     import android.util.Log;
-    import android.view.MenuItem;
     import android.view.View;
     import android.view.Menu;
-    import android.widget.ArrayAdapter;
+    import android.view.ViewGroup;
     import android.widget.Button;
     import android.widget.ImageView;
-    import android.widget.Spinner;
     import android.widget.TextView;
 
     import com.google.android.gms.tasks.OnCompleteListener;
-    import com.google.android.gms.tasks.OnFailureListener;
-    import com.google.android.gms.tasks.OnSuccessListener;
     import com.google.android.gms.tasks.Task;
-    import com.google.android.gms.tasks.TaskCompletionSource;
     import com.google.android.material.snackbar.Snackbar;
     import com.google.android.material.navigation.NavigationView;
 
     import androidx.annotation.NonNull;
     import androidx.core.content.ContextCompat;
-    import androidx.lifecycle.Observer;
     import androidx.lifecycle.ViewModelProvider;
     import androidx.navigation.NavController;
     import androidx.navigation.Navigation;
     import androidx.navigation.ui.AppBarConfiguration;
     import androidx.navigation.ui.NavigationUI;
-    import androidx.drawerlayout.widget.DrawerLayout;
     import androidx.appcompat.app.AppCompatActivity;
+    import androidx.window.core.layout.WindowHeightSizeClass;
+    import androidx.window.core.layout.WindowSizeClass;
+    import androidx.window.core.layout.WindowWidthSizeClass;
+    import androidx.window.layout.WindowMetrics;
+    import androidx.window.layout.WindowMetricsCalculator;
 
     import com.example.listi.databinding.ActivityMainBinding;
-    import com.google.firebase.auth.AuthResult;
     import com.google.firebase.auth.FirebaseAuth;
     import com.google.firebase.auth.FirebaseUser;
     import com.google.firebase.auth.OAuthProvider;
-    import com.google.firebase.firestore.CollectionReference;
-    import com.google.firebase.firestore.DocumentReference;
     import com.google.firebase.firestore.DocumentSnapshot;
-    import com.google.firebase.firestore.FieldPath;
     import com.google.firebase.firestore.FirebaseFirestore;
-    import com.google.firebase.firestore.QueryDocumentSnapshot;
-    import com.google.firebase.firestore.QuerySnapshot;
-
-    import org.w3c.dom.Text;
-
-    import java.util.ArrayList;
-    import java.util.HashMap;
-    import java.util.List;
-    import java.util.Map;
-    import java.util.Objects;
 
     public class MainActivity extends AppCompatActivity {
 
@@ -76,9 +65,40 @@
         private ImageView profile;
         private FirebaseFirestore db;
 
+        private ConnectivityManager connectivityManager;
+        private ConnectivityManager.NetworkCallback networkCallback;
+        private TextView connectionStatusTextView;
+
+
         @Override
         protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
+            userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
+
+            if (compactScreen()) {
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            } else {
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_USER);
+            }
+            connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+            networkCallback = new ConnectivityManager.NetworkCallback() {
+                @Override
+                public void onAvailable(Network network) {
+                    runOnUiThread(() -> {
+                        userViewModel.setNetworkAvailable(true);
+                        Log.d(TAG, "Network Available");
+                    });
+                }
+
+                @Override
+                public void onLost(Network network) {
+                    runOnUiThread(() -> {
+                        userViewModel.setNetworkAvailable(false);
+                        Log.d(TAG, "Network Lost");  // Show message when disconnected
+                    });
+                }
+            };
             ThemeManager.applyTheme(this);
 
             binding = ActivityMainBinding.inflate(getLayoutInflater());
@@ -87,22 +107,24 @@
             setSupportActionBar(binding.appBarMain.toolbar);
 
 
-            DrawerLayout drawer = binding.drawerLayout;
-            NavigationView navigationView = binding.navView;
             mAppBarConfiguration = new AppBarConfiguration.Builder(
                     R.id.nav_home, R.id.nav_accessibility)
-                    .setOpenableLayout(drawer)
+                    .setOpenableLayout(binding.drawerLayout)
                     .build();
             // Passing each menu ID as a set of Ids because each
             // menu should be considered as top level destinations.
 
 
             NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+            navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
+                Log.d("Navigation", "Navigated to: " + destination.getLabel() +
+                        " with ID: " + destination.getId());
+            });
             NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
-            NavigationUI.setupWithNavController(navigationView, navController);
+            NavigationUI.setupWithNavController(binding.navView, navController);
             configureNavigationView();
 
-            View headerView = navigationView.getHeaderView(0);
+            View headerView = binding.navView.getHeaderView(0);
 
             // THEN initialize the views from the header
             navUsername = headerView.findViewById(R.id.username);
@@ -110,7 +132,6 @@
             //profile = headerView.findViewById(R.id.profilePicture);
             //logoutButton = headerView.findViewById(R.id.logout);
 
-            userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
             authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
 
             SharedPreferences prefs = getSharedPreferences("user_prefs", Context.MODE_PRIVATE);
@@ -193,10 +214,6 @@
         }
 
 
-        public void startSignInFlow(){
-            authViewModel.loginWithMicrosoft(this);
-        }
-
         public void signOut(){
             authViewModel.signOut();
             clearData();
@@ -240,112 +257,43 @@
 
         public void updateNavigationMenu(String role) {
             Menu menu = binding.navView.getMenu();
-            if (role != null) {
-                if (role.equals("admin")) {
-                    menu.findItem(R.id.nav_staff_management).setVisible(true);
-                    menu.findItem(R.id.nav_student_management).setVisible(true);
-                    mAppBarConfiguration = new AppBarConfiguration.Builder(
-                            R.id.nav_home, R.id.nav_accessibility, R.id.nav_staff_management, R.id.nav_student_management)
-                            .setOpenableLayout(binding.drawerLayout)
-                            .build();
-                } else if (role.equals("educator")) {
-                    menu.findItem(R.id.nav_staff_management).setVisible(false);
-                    menu.findItem(R.id.nav_student_management).setVisible(true);  // Show student management
-                    mAppBarConfiguration = new AppBarConfiguration.Builder(
-                            R.id.nav_home, R.id.nav_accessibility, R.id.nav_student_management)
-                            .setOpenableLayout(binding.drawerLayout)
-                            .build();
-                } else if (role.equals("public")) {
-                    menu.findItem(R.id.nav_staff_management).setVisible(false);
-                    menu.findItem(R.id.nav_student_management).setVisible(true);
-                    MenuItem menuItem = menu.findItem(R.id.nav_student_management);
-                    if (menuItem != null) {
-                        menuItem.setTitle("Statistika");
-                        menuItem.setVisible(true);
-                    }// Show student management
-                    binding.navView.setCheckedItem(R.id.nav_home);
-                    mAppBarConfiguration = new AppBarConfiguration.Builder(
-                            R.id.nav_home, R.id.nav_accessibility, R.id.nav_student_management)
-                            .setOpenableLayout(binding.drawerLayout)
-                            .build();
-                    userViewModel.getChildID().observe(this, id -> {
-                        if (id != null) {
-                            menu.findItem(R.id.nav_staff_management).setVisible(false);
-                            menu.findItem(R.id.nav_student_management).setVisible(false);  // Show student management
-                            binding.navView.setCheckedItem(R.id.nav_home);
-                            mAppBarConfiguration = new AppBarConfiguration.Builder(
-                                    R.id.nav_home, R.id.nav_accessibility)
-                                    .setOpenableLayout(binding.drawerLayout)
-                                    .build();
+            FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+            if (currentUser != null) {
+                if (role != null) {
+                    if (role.equals("admin")) {
+                        menu.findItem(R.id.nav_statistics).setVisible(false);
+                        menu.findItem(R.id.nav_school_management).setVisible(true);
+                        menu.findItem(R.id.nav_lists).setVisible(false);
+                    } else if (role.equals("educator")) {
+                        menu.findItem(R.id.nav_statistics).setVisible(false);
+                        menu.findItem(R.id.nav_school_management).setVisible(true);
+                        menu.findItem(R.id.nav_lists).setVisible(false);
+                    } else if (role.equals("public")) {
+                        menu.findItem(R.id.nav_school_management).setVisible(false);
+                        menu.findItem(R.id.nav_statistics).setVisible(true);
+                        menu.findItem(R.id.nav_lists).setVisible(true);
 
-                        }
-                    });
-                            /*
-                            FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-                            if (currentUser != null) {
-                                db.collection("users")
-                                        .document(currentUser.getUid())
-                                        .collection("childProfiles")
-                                        .limit(1)
-                                        .get()
-                                        .addOnCompleteListener(task -> {
-                                            if (task.isSuccessful()) {
-                                                QuerySnapshot snapshot = task.getResult();
-                                                if (snapshot != null && !snapshot.isEmpty()) {
-                                                    menu.findItem(R.id.nav_staff_management).setVisible(false);
-                                                    menu.findItem(R.id.nav_student_management).setVisible(true);
-                                                    mAppBarConfiguration = new AppBarConfiguration.Builder(
-                                                            R.id.nav_home, R.id.nav_accessibility, R.id.nav_student_management)
-                                                            .setOpenableLayout(binding.drawerLayout)
-                                                            .build();
-
-                                                } else {
-                                                    menu.findItem(R.id.nav_staff_management).setVisible(false);
-                                                    menu.findItem(R.id.nav_student_management).setVisible(false);
-                                                    mAppBarConfiguration = new AppBarConfiguration.Builder(
-                                                            R.id.nav_home, R.id.nav_accessibility)
-                                                            .setOpenableLayout(binding.drawerLayout)
-                                                            .build();
-                                                }
-                                                NavigationUI.setupWithNavController(binding.navView, Navigation.findNavController(this, R.id.nav_host_fragment_content_main));
-                                                binding.navView.setCheckedItem(R.id.nav_home); // Explicitly set Home as selected
-                                            } else {
-                                                // Handle the error
-                                                Exception e = task.getException();
-                                                if (e != null) {
-                                                    e.printStackTrace();
-                                                }
-                                            }
-                                        });
+                        userViewModel.getChildID().observe(this, id -> {
+                            if (id != null) {
+                                menu.findItem(R.id.nav_school_management).setVisible(false);
+                                menu.findItem(R.id.nav_statistics).setVisible(false);
                             }
-                        } else {
-                            menu.findItem(R.id.nav_staff_management).setVisible(false);
-                            menu.findItem(R.id.nav_student_management).setVisible(false);
-                            mAppBarConfiguration = new AppBarConfiguration.Builder(
-                                    R.id.nav_home, R.id.nav_accessibility)
-                                    .setOpenableLayout(binding.drawerLayout)
-                                    .build();
-                            NavigationUI.setupWithNavController(binding.navView, Navigation.findNavController(this, R.id.nav_host_fragment_content_main));
-                            binding.navView.setCheckedItem(R.id.nav_home); // Explicitly set Home as selected
-                        }
-                    });*/
-                } else {
-                           // Public user only sees home and accessibility
-                           menu.findItem(R.id.nav_staff_management).setVisible(false);
-                           menu.findItem(R.id.nav_student_management).setVisible(false);
-                           mAppBarConfiguration = new AppBarConfiguration.Builder(
-                                   R.id.nav_home, R.id.nav_accessibility)
-                                   .setOpenableLayout(binding.drawerLayout)
-                                   .build();
-                           NavigationUI.setupWithNavController(binding.navView, Navigation.findNavController(this, R.id.nav_host_fragment_content_main));
-                           binding.navView.setCheckedItem(R.id.nav_home); // Explicitly set Home as selected
-                       }
-                       // Move this line inside the role checks to ensure it's called after the menu is configured
-                       // NavigationUI.setupWithNavController(binding.navView, Navigation.findNavController(this, R.id.nav_host_fragment_content_main));
-
+                        });
+                    } else {
+                        // Public user only sees home and accessibility
+                        menu.findItem(R.id.nav_school_management).setVisible(false);
+                        menu.findItem(R.id.nav_statistics).setVisible(false);
+                        menu.findItem(R.id.nav_lists).setVisible(true);
+                    }
                 }
+            } else {
+                menu.findItem(R.id.nav_school_management).setVisible(false);
+                menu.findItem(R.id.nav_statistics).setVisible(false);
+                menu.findItem(R.id.nav_lists).setVisible(false);
+            }
+            binding.navView.invalidate();
+            binding.navView.setCheckedItem(R.id.nav_home);
         }
-
 
 
         public void updateUserData(FirebaseUser user) {
@@ -394,12 +342,12 @@
             updateNavigationMenu("public");
         }
 
-        @Override
+       /* @Override
         public boolean onCreateOptionsMenu(Menu menu) {
             // Inflate the menu; this adds items to the action bar if it is present.
             getMenuInflater().inflate(R.menu.main, menu);
             return true;
-        }
+        }*/
          
         @Override
         public boolean onSupportNavigateUp() {
@@ -407,7 +355,6 @@
             return NavigationUI.navigateUp(navController, mAppBarConfiguration)
                     || super.onSupportNavigateUp();
         }
-
         private void configureNavigationView() {
             NavigationView navigationView = binding.navView;
             FontManager fontManager = new FontManager(this);
@@ -417,23 +364,30 @@
 
             if (fontType.equals(FontManager.FONT_OPEN_DYSLEXIC)) {
                 binding.navView.setItemTextAppearance(R.style.NavigationDrawerText_OpenDyslexic);
-            } else {
+            } else if (fontType.equals(FontManager.FONT_ANDIKA)) {
+                binding.navView.setItemTextAppearance(R.style.NavigationDrawerText_Andika);
+            } else { // Default font
                 binding.navView.setItemTextAppearance(R.style.NavigationDrawerText);
             }
 
-            if(fontType.equals(FontManager.FONT_OPEN_DYSLEXIC)){
-                if(colourType.equals(ColourManager.COLOUR_2)){
-                    navigationView.setBackgroundColor(ContextCompat.getColor(this, R.color.colorSurface_2));
-                }else{
-                    navigationView.setBackgroundColor(ContextCompat.getColor(this, R.color.colorSurface));
-                }
-            }else {
-                if (colourType.equals(ColourManager.COLOUR_2)) {
-                    navigationView.setBackgroundColor(ContextCompat.getColor(this, R.color.colorSurface_2));
-                }else{
-                    navigationView.setBackgroundColor(ContextCompat.getColor(this, R.color.colorSurface));
-                }
+            if (colourType.equals(ColourManager.COLOUR_2)) {
+                navigationView.setBackgroundColor(ContextCompat.getColor(this, R.color.colorSurface_2));
+            } else if (colourType.equals(ColourManager.COLOUR_3)) {
+                navigationView.setBackgroundColor(ContextCompat.getColor(this, R.color.colorSurface_3));
+            } else { // Default color
+                navigationView.setBackgroundColor(ContextCompat.getColor(this, R.color.colorSurface));
             }
+        }
+
+        /** Determines whether the device has a compact screen. **/
+        public boolean compactScreen() {
+            WindowMetrics metrics = WindowMetricsCalculator.getOrCreate().computeMaximumWindowMetrics(this);
+            int width = metrics.getBounds().width();
+            int height = metrics.getBounds().height();
+            float density = getResources().getDisplayMetrics().density;
+            WindowSizeClass windowSizeClass = WindowSizeClass.compute(width/density, height/density);
+            return windowSizeClass.getWindowWidthSizeClass() == WindowWidthSizeClass.COMPACT ||
+                    windowSizeClass.getWindowHeightSizeClass() == WindowHeightSizeClass.COMPACT;
         }
 
         @Override
@@ -442,6 +396,7 @@
             FirebaseUser currentUser = authRepository.getCurrentUser();
             userViewModel.setUser(currentUser);
 
+            connectivityManager.registerDefaultNetworkCallback(networkCallback);
 
             if (currentUser != null) {
                 // User is logged in, update UI with their information
@@ -458,6 +413,9 @@
         @Override
         public void onStop(){
             super.onStop();
+            if (connectivityManager != null && networkCallback != null) {
+                connectivityManager.unregisterNetworkCallback(networkCallback);
+            }
             if(authStateListener != null){
                 authRepository.removeAuthStateListener(authStateListener);
             }

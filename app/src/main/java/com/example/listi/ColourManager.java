@@ -9,6 +9,8 @@ public class ColourManager {
     public static final String COLOUR_1 = "1";
     public static final String COLOUR_2 = "2";
 
+    public static final String COLOUR_3 = "3";
+
     private final SharedPreferences sharedPreferences;
 
     public ColourManager(Context context) {

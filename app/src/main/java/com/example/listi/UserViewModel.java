@@ -16,17 +16,27 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class UserViewModel extends ViewModel {
     private final MutableLiveData<FirebaseUser> user = new MutableLiveData<>();
 
     private final MutableLiveData<String> userIdEducator = new MutableLiveData<>();
     private final MutableLiveData<String> role = new MutableLiveData<>();
-    private final MutableLiveData<List<String>> yearGroups = new MutableLiveData<>();
-    private final MutableLiveData<List<String>> yearGroupsEducator = new MutableLiveData<>();
-    private final MutableLiveData<List<String>> classes = new MutableLiveData<>();
-    private final MutableLiveData<List<String>> classesEducator = new MutableLiveData<>();
+    private final MutableLiveData<ArrayList<YearGroup>> yearGroups = new MutableLiveData<>();
+    private final MutableLiveData<ArrayList<YearGroup>> yearGroupsEducator = new MutableLiveData<>();
+    private final MutableLiveData<ArrayList<ClassRoom>> classes = new MutableLiveData<>();
+    private final MutableLiveData<ArrayList<ClassRoom>> classesEducator = new MutableLiveData<>();
+
+    private final MutableLiveData<ArrayList<Student>> students = new MutableLiveData<>();
+    private final MutableLiveData<ArrayList<Educator>> educators = new MutableLiveData<>();
+
+    private final MutableLiveData<ArrayList<WordList>> lists = new MutableLiveData<>();
+
+    public final MutableLiveData<ArrayList<ChildProfile>> childProfiles = new MutableLiveData<>();
+
     private final MutableLiveData<String> schoolName = new MutableLiveData<>();
     private final MutableLiveData<String> schoolID = new MutableLiveData<>();
     private final MutableLiveData<String> yearGroupID = new MutableLiveData<>();
@@ -36,11 +46,16 @@ public class UserViewModel extends ViewModel {
     private final MutableLiveData<String> childID = new MutableLiveData<>();
     private final MutableLiveData<String> childName = new MutableLiveData<>();
 
+    private final MutableLiveData<Map<String, List<String>>> incorrectWords = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> isNetworkAvailable = new MutableLiveData<>();
+
 
     public void setUser(FirebaseUser user){
         this.user.setValue(user);
     }
     public void setRole(String role){
+        Log.d("UserViewModel", "Setting role to: " + role);
+
         this.role.setValue(role);
     }
     public void setSchoolName(String schoolName){
@@ -60,21 +75,34 @@ public class UserViewModel extends ViewModel {
         this.classRoomID.setValue(classRoomID);
     }
 
-    public void setYearGroups(List<String> yearGroups){
+    public void setYearGroups(ArrayList<YearGroup> yearGroups){
         this.yearGroups.setValue(yearGroups);
     }
 
-    public void setYearGroupsEducator(List<String> yearGroups){
+    public void setYearGroupsEducator(ArrayList<YearGroup> yearGroups){
         this.yearGroupsEducator.setValue(yearGroups);
     }
 
-    public void setClasses(List<String> classes){
+    public void setClasses(ArrayList<ClassRoom> classes){
         this.classes.setValue(classes);
     }
 
-    public void setClassesEducator(List<String> classesEducator){
+    public void setClassesEducator(ArrayList<ClassRoom> classesEducator){
         this.classesEducator.setValue(classesEducator);
     }
+
+    public void setStudents(ArrayList<Student> students){
+        this.students.setValue(students);
+    }
+
+    public void setEducators(ArrayList<Educator> educators){
+        this.educators.setValue(educators);
+    }
+
+    public void setLists(ArrayList<WordList> lists) {this.lists.setValue(lists);}
+
+    public void setChildProfiles(ArrayList<ChildProfile> childProfiles){ this.childProfiles.setValue(childProfiles);}
+
 
     public void setChildID(String childID){
         this.childID.setValue(childID);
@@ -83,6 +111,8 @@ public class UserViewModel extends ViewModel {
     public void setChildName(String childName){
         this.childName.setValue(childName);
     }
+
+    public void setIncorrectWords(Map<String, List<String>> incorrectWords){this.incorrectWords.setValue(incorrectWords);}
 
     public LiveData<FirebaseUser> getUser(){
         return user;
@@ -100,23 +130,43 @@ public class UserViewModel extends ViewModel {
         return schoolName;
     }
 
-    public LiveData<List<String>> getYearGroups(){
+    public LiveData<ArrayList<YearGroup>> getYearGroups(){
         return yearGroups;
     }
 
-    public LiveData<List<String>> getYearGroupsEducator(){
+    public LiveData<ArrayList<YearGroup>> getYearGroupsEducator(){
         return yearGroupsEducator;
     }
 
-    public LiveData<List<String>> getClasses(){
+    public LiveData<ArrayList<ClassRoom>> getClasses(){
         return classes;
     }
 
-    public LiveData<List<String>> getClassesEducator(){
+    public LiveData<ArrayList<ClassRoom>>getClassesEducator(){
         return classesEducator;
     }
 
+    public LiveData<ArrayList<Student>>getStudents(){
+        return students;
+    }
 
+    public LiveData<ArrayList<Educator>>getEducators(){
+        return educators;
+    }
+
+    public LiveData<ArrayList<WordList>>getLists(){return lists;}
+    public LiveData<ArrayList<ChildProfile>>getChildProfiles(){ return childProfiles; }
+
+
+
+
+    public LiveData<Boolean> getIsNetworkAvailable() {
+        return isNetworkAvailable;
+    }
+
+    public void setNetworkAvailable(boolean isAvailable) {
+        isNetworkAvailable.setValue(isAvailable);
+    }
     public LiveData<String> getSchoolID(){
         return schoolID;
     }
@@ -132,5 +182,8 @@ public class UserViewModel extends ViewModel {
     public LiveData<String> getChildID() {return childID;}
 
     public LiveData<String> getChildName() {return childName;}
+
+    public LiveData<Map<String, List<String>>> getIncorrectWords(){return incorrectWords;}
+
 
 }
